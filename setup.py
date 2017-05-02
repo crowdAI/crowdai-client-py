@@ -8,4 +8,6 @@ setup(name='crowdai',
       author_email='sharada.mohanty@epfl.ch',
       license='MIT',
       packages=['crowdai'],
+      test_suite='nose.collector',
+      tests_require=['nose'],
       zip_safe=False)
