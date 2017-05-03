@@ -11,6 +11,7 @@ class GeccoOptimizationChallenge2017(BaseChallenge):
         self.evaluation_response = args
         print "Evaluate Response : ",args
         #TO-DO: Do error handling here
+        #TO-DO: Do Progress handling here
 
     def evaluate(self, data, dry_run=False):
         self.evaluation_response = None
@@ -27,3 +28,8 @@ class GeccoOptimizationChallenge2017(BaseChallenge):
             # TO-DO: Raise Error Here
         else:
             return self.evaluation_response
+
+    def submit(self, data, dry_run=False):
+        #Submit final score
+        # Close socket.io connection
+        pass
