@@ -1,4 +1,5 @@
 from socketIO_client import SocketIO, LoggingNamespace
+import uuid
 
 class BaseChallengeException(Exception):
     pass
@@ -42,24 +43,42 @@ class BaseChallenge(object):
 
     def on_execute_function_response(self, args):
         if args["status"] == True:
-            self.execute_function_response = args
+            print args
         else:
-            # TO-DO: Log Challenge Error
             raise CrowdAIExecuteFunctionError(args["message"])
+        # if args["status"] == True:
+        #     self.execute_function_response = args
+        # else:
+        #     # TO-DO: Log Challenge Error
+        #     raise CrowdAIExecuteFunctionError(args["message"])
+    def on_execute_function_response_complete(self, args):
+        """
+            Placeholder function to be able to account for
+            Timeout thresholds
+        """
+        pass
 
     def execute_function(self, function_name, data, dry_run=False):
         #TO-DO : Validate if authenticated
+        self.response_channel = self.challenge_id+"::"+str(uuid.uuid4())
+        #Prepare for response
+        self.socketio.on(self.response_channel, self.on_execute_function_response)
         self.execute_function_response = None
         self.socketio.emit('execute_function',
-                        {   "session_token": self.session_key,
+                        {   "response_channel" : self.response_channel,
+                            "session_token": self.session_key,
                             "challenge_id": self.challenge_id,
                             "function_name": function_name,
                             "data": data,
                             "dry_run" : dry_run
-                        }, self.on_execute_function_response)
+                        }, self.on_execute_function_response_complete)
+
+        #TO-DO: Loop till execute_function_response is not valid
+
         self.socketio.wait_for_callbacks(seconds=self.config['challenges'][self.challenge_id]["TIMEOUT_EXECUTION"])
-        if self.execute_function_response == None:
-            raise CrowdAIExecuteFunctionError("Evaluation Request Timeout")
-            # print "Evaluation Request Timed Out..."
-        else:
-            return self.execute_function_response["response"]
+        #if self.execute_function_response == None:
+        #    raise CrowdAIExecuteFunctionError("Evaluation Request Timeout")
+        #    # print "Evaluation Request Timed Out..."
+        #else:
+        #    response = self.execute_function_response
+        #    return response["response"]
