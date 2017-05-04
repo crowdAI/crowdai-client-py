@@ -20,16 +20,19 @@ class BaseChallenge(object):
         if args["status"] == True:
             self.session_key = args["session_token"]
         else:
+            # TO-DO: Log authentication error
             raise CrowdAIAuthenticationError(args["message"])
 
     def _authenticate(self):
         print "Beginning Authenticating :", self.challenge_id, self.api_key
+        self.session_key = None
         self.socketio.emit('authenticate', {"API_KEY":self.api_key,
                                        "challenge_id": self.challenge_id},
                                        self._authenticate_response)
         self.socketio.wait_for_callbacks(seconds=self.config['TIMEOUT_AUTHENTICATE'])
         if self.session_key == None:
-            print "Authentication timeout..."
+            # TO-DO: Log authentication error
+            raise CrowdAIAuthenticationError("Authentication Timeout")
         else:
             print "Authentication successful :: Token :: ", self.session_key
-            # TO-DO: Raise Error
+            # TO-DO: Log authentication successful
