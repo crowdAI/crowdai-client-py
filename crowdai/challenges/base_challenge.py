@@ -46,11 +46,7 @@ class BaseChallenge(object):
             print args
         else:
             raise CrowdAIExecuteFunctionError(args["message"])
-        # if args["status"] == True:
-        #     self.execute_function_response = args
-        # else:
-        #     # TO-DO: Log Challenge Error
-        #     raise CrowdAIExecuteFunctionError(args["message"])
+
     def on_execute_function_response_complete(self, args):
         """
             Placeholder function to be able to account for
