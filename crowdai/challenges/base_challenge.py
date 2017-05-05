@@ -62,7 +62,9 @@ class BaseChallenge(object):
         #TO-DO : Validate if authenticated
         self.response_channel = self.challenge_id+"::"+str(uuid.uuid4())
         #Prepare for response
-        self.socketio.on(self.response_channel, self.on_execute_function_response)
+
+        #NOTE: response_channel is prepended with the session_key to discourage hijacking attempts
+        self.socketio.on(self.session_key+"::"+self.response_channel, self.on_execute_function_response)
         self.execute_function_response = None
         self.socketio.emit('execute_function',
                         {   "response_channel" : self.response_channel,
