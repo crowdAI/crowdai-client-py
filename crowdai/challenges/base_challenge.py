@@ -1,14 +1,6 @@
 from socketIO_client import SocketIO, LoggingNamespace
 import uuid
-
-class BaseChallengeException(Exception):
-    pass
-
-class CrowdAIAuthenticationError(BaseChallengeException):
-    pass
-
-class CrowdAIExecuteFunctionError(BaseChallengeException):
-    pass
+from crowdai_errors import *
 
 class BaseChallenge(object):
     def __init__(self, challenge_id, api_key, config):
