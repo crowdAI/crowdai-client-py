@@ -11,6 +11,6 @@ class GeccoOptimizationChallenge2017(BaseChallenge):
         return self.execute_function('evaluate', data)
 
     def submit(self, data, dry_run=False):
-        #Submit final score
+        # Submit final score
         # Close socket.io connection
-        pass
+        return self.execute_function('submit', data)

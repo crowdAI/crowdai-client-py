@@ -67,6 +67,7 @@ class BaseChallenge(object):
         self.socketio.emit('execute_function',
                         {   "response_channel" : self.response_channel,
                             "session_token": self.session_key,
+                            "api_key": self.api_key,
                             "challenge_id": self.challenge_id,
                             "function_name": function_name,
                             "data": data,
