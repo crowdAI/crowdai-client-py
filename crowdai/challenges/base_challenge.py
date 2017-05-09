@@ -7,6 +7,8 @@ import json
 from tqdm import tqdm
 from termcolor import colored, cprint
 
+import pkg_resources
+
 
 class BaseChallenge(object):
     def __init__(self, challenge_id, api_key, config):
@@ -36,8 +38,9 @@ class BaseChallenge(object):
 
         self.session_key = None
         self.socketio.emit('authenticate', {"API_KEY":self.api_key,
-                                       "challenge_id": self.challenge_id},
-                                       self._authenticate_response)
+                                           "challenge_id": self.challenge_id,
+                                           "client_version":pkg_resources.get_distribution("crowdai").version},
+                                           self._authenticate_response)
         self.socketio.wait_for_callbacks(seconds=self.config['TIMEOUT_AUTHENTICATE'])
         if self.session_key == None:
             # TO-DO: Log authentication error
