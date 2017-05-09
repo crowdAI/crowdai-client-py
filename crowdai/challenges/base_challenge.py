@@ -96,6 +96,11 @@ class BaseChallenge(object):
             job_event_messsage += colored("CrowdAI.Job.Event", "cyan", attrs=['bold'])+":  "
             job_event_messsage += colored("JOB_INFO", "yellow", attrs=['bold']) +" "+payload["message"]
             self.write_above_single_progress_bar(job_event_messsage)
+        elif job_state == JobStates.TIMEOUT:
+            job_event_messsage = ""
+            job_event_messsage += colored("CrowdAI.Job.Event", "cyan", attrs=['bold'])+":  "
+            job_event_messsage += colored("JOB_INFO", "red", attrs=['bold']) +" "+payload["message"]
+            self.write_above_single_progress_bar(job_event_messsage)
         else:
             job_event_messsage = ""
             job_event_messsage += colored("CrowdAI.Job.Event", "cyan", attrs=['bold'])+":  "
