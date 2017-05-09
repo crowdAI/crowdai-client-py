@@ -91,6 +91,11 @@ class BaseChallenge(object):
 
             self.write_above_single_progress_bar(job_event_messsage)
             self.update_single_progress_bar_description(colored(job_id, 'green', attrs=['bold']))
+        elif job_state == JobStates.INFO:
+            job_event_messsage = ""
+            job_event_messsage += colored("CrowdAI.Job.Event", "cyan", attrs=['bold'])+":  "
+            job_event_messsage += colored("JOB_INFO", "yellow", attrs=['bold']) +" "+payload["message"]
+            self.write_above_single_progress_bar(job_event_messsage)
         else:
             job_event_messsage = ""
             job_event_messsage += colored("CrowdAI.Job.Event", "cyan", attrs=['bold'])+":  "

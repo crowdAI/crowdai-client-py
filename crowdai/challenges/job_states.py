@@ -5,4 +5,5 @@ class JobStates:
     PROGRESS_UPDATE="crowdai.job_state.PROGRESS_UPDATE"
     COMPLETE="crowdai.job_state.COMPLETE"
     ERROR="crowdai.job_state.ERROR"
+    INFO="crowdai.job_state.INFO"
     TIMEOUT="crowdai.job_state.TIMEOUT"
