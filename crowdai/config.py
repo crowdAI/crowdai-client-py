@@ -7,7 +7,7 @@ config = {
     'challenges' : {
         'GeccoOptimizationChallenge2017': {
             "class": GeccoOptimizationChallenge2017,
-            "TIMEOUT_EXECUTION" : 20
+            "TIMEOUT_EXECUTION" : 20000
             }
     }
 }

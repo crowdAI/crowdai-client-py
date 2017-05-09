@@ -5,7 +5,7 @@ def Challenge(challenge_id, API_KEY):
         return config['challenges'][challenge_id]['class'](API_KEY, config)
     else:
         #TO-DO : Do error handling here
-        print "Error :( Unknown challenge_id. Update your client"
+        raise Exception("Error :( Unknown challenge_id. Update your client")
 
 def test():
     """

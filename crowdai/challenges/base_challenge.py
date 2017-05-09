@@ -1,6 +1,7 @@
 from socketIO_client import SocketIO, LoggingNamespace
 import uuid
 from crowdai_errors import *
+from job_states import JobStates
 
 class BaseChallenge(object):
     def __init__(self, challenge_id, api_key, config):
@@ -8,6 +9,7 @@ class BaseChallenge(object):
         self.challenge_id = challenge_id
         self.config = config
         self.session_key = None
+        self.latest_response = False
 
     def _connect(self):
         self.socketio = SocketIO(self.config['remote_host'], self.config['remote_port'], LoggingNamespace)
@@ -33,18 +35,21 @@ class BaseChallenge(object):
             print "Authentication successful :: Token :: ", self.session_key
             # TO-DO: Log authentication successful
 
-    def on_execute_function_response(self, args):
-        if args["status"] == True:
-            print args
-        else:
-            raise CrowdAIExecuteFunctionError(args["message"])
+    def on_execute_function_response(self, args, secondary_args):
+        print "Inside : on_execute_function_response", args, secondary_args
+        # if args["status"] == True:
+        #     print "Logger.ProgressUpdate : Progress : ",args['progress']*100, "% "
+        #     self.latest_response = args["response"]
+        # else:
+        #     raise CrowdAIExecuteFunctionError(args["message"])
 
     def on_execute_function_response_complete(self, args):
+        print "Inside : on_execute_function_response_complete", args
         """
             Placeholder function to be able to account for
             Timeout thresholds
         """
-        pass
+        return {}
 
     def execute_function(self, function_name, data, dry_run=False):
         #TO-DO : Validate if authenticated
@@ -52,6 +57,7 @@ class BaseChallenge(object):
         #Prepare for response
 
         #NOTE: response_channel is prepended with the session_key to discourage hijacking attempts
+        print "Listening on : ", self.session_key+"::"+self.response_channel
         self.socketio.on(self.session_key+"::"+self.response_channel, self.on_execute_function_response)
         self.execute_function_response = None
         self.socketio.emit('execute_function',
@@ -63,8 +69,6 @@ class BaseChallenge(object):
                             "data": data,
                             "dry_run" : dry_run
                         }, self.on_execute_function_response_complete)
-
-        #TO-DO: Loop till execute_function_response is not valid
 
         self.socketio.wait_for_callbacks(seconds=self.config['challenges'][self.challenge_id]["TIMEOUT_EXECUTION"])
         #if self.execute_function_response == None:
