@@ -2,6 +2,11 @@ from socketIO_client import SocketIO, LoggingNamespace
 import uuid
 from crowdai_errors import *
 from job_states import JobStates
+import json
+
+from tqdm import tqdm
+from termcolor import colored, cprint
+
 
 class BaseChallenge(object):
     def __init__(self, challenge_id, api_key, config):
@@ -10,6 +15,7 @@ class BaseChallenge(object):
         self.config = config
         self.session_key = None
         self.latest_response = False
+        self.pbar = None
 
     def _connect(self):
         self.socketio = SocketIO(self.config['remote_host'], self.config['remote_port'], LoggingNamespace)
@@ -22,7 +28,12 @@ class BaseChallenge(object):
             raise CrowdAIAuthenticationError(args["message"])
 
     def _authenticate(self):
-        print "Beginning Authenticating :", self.challenge_id, self.api_key
+        begin_authentication_message = ""
+        begin_authentication_message += colored("CrowdAI.Authentication.Event", "cyan", attrs=['bold'])+":  "
+        begin_authentication_message += "Authenticating for challenge = "
+        begin_authentication_message += colored(self.challenge_id, "blue", attrs=['bold', 'underline'])
+        print begin_authentication_message
+
         self.session_key = None
         self.socketio.emit('authenticate', {"API_KEY":self.api_key,
                                        "challenge_id": self.challenge_id},
@@ -32,23 +43,65 @@ class BaseChallenge(object):
             # TO-DO: Log authentication error
             raise CrowdAIAuthenticationError("Authentication Timeout")
         else:
-            print "Authentication successful :: Token :: ", self.session_key
+            # session_key_message = ""
+            # session_key_message += colored("CrowdAI.Authentication.Event", "blue", attrs=['bold'])+":  "
+            # session_key_message += "session_key="+colored(self.session_key, "blue", attrs=['bold'])
+            # print session_key_message
+            pass
+            # Temporarily ignore printing session_key
             # TO-DO: Log authentication successful
 
-    def on_execute_function_response(self, args, secondary_args):
-        print "Inside : on_execute_function_response", args, secondary_args
-        # if args["status"] == True:
-        #     print "Logger.ProgressUpdate : Progress : ",args['progress']*100, "% "
-        #     self.latest_response = args["response"]
-        # else:
-        #     raise CrowdAIExecuteFunctionError(args["message"])
+    def on_execute_function_response(self, channel_name, payload):
+        payload = json.loads(payload)
+        job_state = payload['job_state']
+        job_id = payload['job_id']
+        if job_state == JobStates.ERROR:
+            raise CrowdAIExecuteFunctionError(payload["message"])
+        elif job_state == JobStates.ENQUEUED :
+            job_event_messsage = ""
+            job_event_messsage += colored("CrowdAI.Job.Event", "cyan", attrs=['bold'])+":  "
+            job_event_messsage += colored("JOB_ENQUEUED ("+job_id+")", "yellow", attrs=['bold'])
+
+            self.write_above_single_progress_bar(job_event_messsage)
+
+            # job_event_messsage = ""
+            # job_event_messsage += colored("CrowdAI.Job.Event", "cyan", attrs=['bold'])+":  "
+            # job_event_messsage += "job_id = " + colored(job_id, "yellow", attrs=['bold'])
+            #
+            # self.write_above_single_progress_bar(job_event_messsage)
+            # self.update_single_progress_bar_description(colored(job_id, 'green', attrs=['bold']))
+        elif job_state == JobStates.RUNNING :
+            job_event_messsage = ""
+            job_event_messsage += colored("CrowdAI.Job.Event", "cyan", attrs=['bold'])+":  "
+            job_event_messsage += colored("JOB_RUNNING", "blue", attrs=['bold'])
+
+            self.write_above_single_progress_bar(job_event_messsage)
+            self.update_single_progress_bar_description(colored(job_id, 'green', attrs=['bold']))
+        elif job_state == JobStates.PROGRESS_UPDATE :
+            self.update_single_progress_bar(payload["data"]["percent_complete"])
+            self.update_single_progress_bar_description(colored(job_id, 'green', attrs=['bold']))
+        elif job_state == JobStates.COMPLETE :
+            self.update_single_progress_bar(100)
+            job_event_messsage = ""
+            job_event_messsage += colored("CrowdAI.Job.Event", "cyan", attrs=['bold'])+":  "
+            job_event_messsage += colored("JOB_COMPLETE", "green", attrs=['bold'])
+
+            self.write_above_single_progress_bar(job_event_messsage)
+            self.update_single_progress_bar_description(colored(job_id, 'green', attrs=['bold']))
+        else:
+            job_event_messsage = ""
+            job_event_messsage += colored("CrowdAI.Job.Event", "cyan", attrs=['bold'])+":  "
+            job_event_messsage += colored("JOB_ERROR", "red", attrs=['bold'])
+            self.write_above_single_progress_bar(job_event_messsage)
+            raise CrowdAIExecuteFunctionError("Malformed response from server. \
+                                            Please contact the server admins.\n")
 
     def on_execute_function_response_complete(self, args):
-        print "Inside : on_execute_function_response_complete", args
         """
             Placeholder function to be able to account for
             Timeout thresholds
         """
+        self.pbar = self.close_single_progress_bar()
         return {}
 
     def execute_function(self, function_name, data, dry_run=False):
@@ -56,8 +109,11 @@ class BaseChallenge(object):
         self.response_channel = self.challenge_id+"::"+str(uuid.uuid4())
         #Prepare for response
 
+        # Instantiate Progressbar
+        self.instantiate_single_progressbar()
+
         #NOTE: response_channel is prepended with the session_key to discourage hijacking attempts
-        print "Listening on : ", self.session_key+"::"+self.response_channel
+        #print "Listening on : ", self.session_key+"::"+self.response_channel
         self.socketio.on(self.session_key+"::"+self.response_channel, self.on_execute_function_response)
         self.execute_function_response = None
         self.socketio.emit('execute_function',
@@ -77,3 +133,30 @@ class BaseChallenge(object):
         #else:
         #    response = self.execute_function_response
         #    return response["response"]
+
+    def instantiate_single_progressbar(self):
+        self.pbar = tqdm(total=100, dynamic_ncols=True, unit="% ", \
+                         bar_format="{desc}{percentage:3.0f}% "\
+                         "|{bar}|" \
+                        #  "{n_fmt}/{total_fmt}" \
+                         "[{elapsed}<{remaining}] "\
+                         " {rate_fmt}] "\
+                         ""\
+                         )
+        self.last_reported_progress = 0
+
+    def close_single_progress_bar(self):
+        self.pbar.close()
+        self.last_reported_progress = 0
+
+    def update_single_progress_bar(self, percent_complete):
+        if percent_complete > self.last_reported_progress:
+            update_length = int(percent_complete)- self.last_reported_progress
+            self.pbar.update(update_length)
+            self.last_reported_progress += update_length
+
+    def write_above_single_progress_bar(self, line):
+        tqdm.write(line)
+
+    def update_single_progress_bar_description(self, line):
+        self.pbar.set_description(line)
