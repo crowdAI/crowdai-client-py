@@ -1,4 +1,4 @@
-from crowdai.challenges.gecco_optimization_challenge_2017 import GeccoOptimizationChallenge2017
+from challenges.gecco_optimization_challenge_2017 import GeccoOptimizationChallenge2017
 
 config = {
     'remote_host' : 'iccluster043',
