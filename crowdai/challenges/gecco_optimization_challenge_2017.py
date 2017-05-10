@@ -7,8 +7,11 @@ class GeccoOptimizationChallenge2017(BaseChallenge):
         self._connect()
         self._authenticate()
 
+    def evaluate_parallel(self, data, dry_run=False):
+        return self.execute_function('evaluate', data, parallel=True)
+
     def evaluate(self, data, dry_run=False):
-        return self.execute_function('evaluate', data)
+        return self.execute_function('evaluate', data, parallel=False)
 
     def submit(self, data, dry_run=False):
         # Submit final score

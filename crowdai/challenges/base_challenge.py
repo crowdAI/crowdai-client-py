@@ -139,12 +139,15 @@ class BaseChallenge(object):
             # TODO: Possible to raise different kinds of errors by matching
             # the beginning of the message to custom string markers
             raise CrowdAIExecuteFunctionError(args["message"])
+        if args["job_state"] == JobStates.COMPLETE:
+            self.aggregated_responses = args["data"]
         return {}
 
     def execute_function(self, function_name, data, dry_run=False, parallel=False):
         #TO-DO : Validate if authenticated
         self.response_channel = self.challenge_id+"::"+str(uuid.uuid4())
         #Prepare for response
+        self.aggregated_responses = False
 
         # Instantiate Progressbar
         if self.PROGRESS_BAR:
@@ -168,6 +171,18 @@ class BaseChallenge(object):
                         }, self.on_execute_function_response_complete)
 
         self.socketio.wait_for_callbacks(seconds=self.config['challenges'][self.challenge_id]["TIMEOUT_EXECUTION"])
+
+        """
+        This keeps checking until the aggregated_responses are prepared by the final on_execute_function_response_complete
+        and then it returns the same to the calling function
+        This is only to ensure that the function is blocking function
+        """
+        #TODO Explore if we can come up with an event based mechanism for the same
+        while True:
+            if self.aggregated_responses:
+                return self.aggregated_responses
+            time.sleep(1)
+
         #if self.execute_function_response == None:
         #    raise CrowdAIExecuteFunctionError("Evaluation Request Timeout")
         #    # print "Evaluation Request Timed Out..."
