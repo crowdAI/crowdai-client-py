@@ -141,14 +141,17 @@ class BaseChallenge(object):
             raise CrowdAIExecuteFunctionError(args["message"])
         return {}
 
-    def execute_function(self, function_name, data, dry_run=False):
+    def execute_function(self, function_name, data, dry_run=False, parallel=False):
         #TO-DO : Validate if authenticated
         self.response_channel = self.challenge_id+"::"+str(uuid.uuid4())
         #Prepare for response
 
         # Instantiate Progressbar
         if self.PROGRESS_BAR:
-            self.instantiate_progress_bars(len(data))
+            number_of_processes = 1
+            if parallel:
+                number_of_processes = len(data)
+            self.instantiate_progress_bars(number_of_processes)
 
         #NOTE: response_channel is prepended with the session_key to discourage hijacking attempts
         self.socketio.on(self.session_key+"::"+self.response_channel, self.on_execute_function_response)
@@ -161,7 +164,7 @@ class BaseChallenge(object):
                             "function_name": function_name,
                             "data": data,
                             "dry_run" : dry_run,
-                            "parallel" : True #TODO==REFACTOR THIS !! #TODO #TODO#TODO#TODO#TODO#TODO#TODO#TODO#TODO#TODO#TODO#TODO#TODO#TODO#TODO
+                            "parallel" : parallel
                         }, self.on_execute_function_response_complete)
 
         self.socketio.wait_for_callbacks(seconds=self.config['challenges'][self.challenge_id]["TIMEOUT_EXECUTION"])
