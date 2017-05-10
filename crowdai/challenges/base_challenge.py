@@ -192,7 +192,7 @@ class BaseChallenge(object):
         while True:
             if self.aggregated_responses:
                 return self.aggregated_responses
-            time.sleep(1)
+            time.sleep(2)
 
         #if self.execute_function_response == None:
         #    raise CrowdAIExecuteFunctionError("Evaluation Request Timeout")
