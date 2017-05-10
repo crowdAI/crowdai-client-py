@@ -63,6 +63,8 @@ class BaseChallenge(object):
         payload = json.loads(payload)
         job_state = payload['job_state']
         job_id = payload['job_id']
+        sequence_no = payload["data_sequence_no"] #Sequence No being the index of the corresponding input data point in the parallel execution array
+
         if job_state == JobStates.ERROR:
             raise CrowdAIExecuteFunctionError(payload["message"])
         elif job_state == JobStates.ENQUEUED :
@@ -71,57 +73,57 @@ class BaseChallenge(object):
             job_event_messsage += colored("JOB_ENQUEUED ("+job_id+")", "yellow", attrs=['bold'])
 
             if self.PROGRESS_BAR:
-                self.write_above_single_progress_bar(job_event_messsage)
+                self.write_above_single_progress_bar(sequence_no, job_event_messsage)
 
             # job_event_messsage = ""
             # job_event_messsage += colored("CrowdAI.Job.Event", "cyan", attrs=['bold'])+":  "
             # job_event_messsage += "job_id = " + colored(job_id, "yellow", attrs=['bold'])
             #
-            # self.write_above_single_progress_bar(job_event_messsage)
-            # self.update_single_progress_bar_description(colored(job_id, 'green', attrs=['bold']))
+            # self.write_above_single_progress_bar(sequence_no, job_event_messsage)
+            # self.update_single_progress_bar_description(sequence_no, colored(job_id, 'green', attrs=['bold']))
         elif job_state == JobStates.RUNNING :
             job_event_messsage = ""
             job_event_messsage += colored("CrowdAI.Job.Event", "cyan", attrs=['bold'])+":  "
-            job_event_messsage += colored("JOB_RUNNING", "blue", attrs=['bold'])
+            job_event_messsage += colored("JOB_RUNNING ("+job_id+")", "blue", attrs=['bold'])
 
             if self.PROGRESS_BAR:
-                self.write_above_single_progress_bar(job_event_messsage)
-                self.update_single_progress_bar_description(colored(job_id, 'green', attrs=['bold']))
+                self.write_above_single_progress_bar(sequence_no, job_event_messsage)
+                self.update_single_progress_bar_description(sequence_no, colored(job_id, 'green', attrs=['bold']))
         elif job_state == JobStates.PROGRESS_UPDATE :
             if self.PROGRESS_BAR:
-                self.update_single_progress_bar(payload["data"]["percent_complete"])
-                self.update_single_progress_bar_description(colored(job_id, 'green', attrs=['bold']))
+                self.update_single_progress_bar(sequence_no, payload["data"]["percent_complete"])
+                self.update_single_progress_bar_description(sequence_no, colored(job_id, 'green', attrs=['bold']))
         elif job_state == JobStates.COMPLETE :
             if self.PROGRESS_BAR:
-                self.update_single_progress_bar(100)
+                self.update_single_progress_bar(sequence_no, 100)
             job_event_messsage = ""
             job_event_messsage += colored("CrowdAI.Job.Event", "cyan", attrs=['bold'])+":  "
-            job_event_messsage += colored("JOB_COMPLETE", "green", attrs=['bold'])
+            job_event_messsage += colored("JOB_COMPLETE ("+job_id+")", "green", attrs=['bold'])
 
             if self.PROGRESS_BAR:
-                self.write_above_single_progress_bar(job_event_messsage)
-                self.update_single_progress_bar_description(colored(job_id, 'green', attrs=['bold']))
+                self.write_above_single_progress_bar(sequence_no, job_event_messsage)
+                self.update_single_progress_bar_description(sequence_no, colored(job_id, 'green', attrs=['bold']))
         elif job_state == JobStates.INFO:
             job_event_messsage = ""
             job_event_messsage += colored("CrowdAI.Job.Event", "cyan", attrs=['bold'])+":  "
-            job_event_messsage += colored("JOB_INFO", "yellow", attrs=['bold']) +" "+payload["message"]
+            job_event_messsage += colored("JOB_INFO ("+job_id+")", "yellow", attrs=['bold']) +" "+payload["message"]
 
             if self.PROGRESS_BAR:
-                self.write_above_single_progress_bar(job_event_messsage)
+                self.write_above_single_progress_bar(sequence_no, job_event_messsage)
         elif job_state == JobStates.TIMEOUT:
             job_event_messsage = ""
             job_event_messsage += colored("CrowdAI.Job.Event", "cyan", attrs=['bold'])+":  "
-            job_event_messsage += colored("JOB_INFO", "red", attrs=['bold']) +" "+payload["message"]
+            job_event_messsage += colored("JOB_INFO ("+job_id+")", "red", attrs=['bold']) +" "+payload["message"]
 
             if self.PROGRESS_BAR:
-                self.write_above_single_progress_bar(job_event_messsage)
+                self.write_above_single_progress_bar(sequence_no, job_event_messsage)
         else:
             job_event_messsage = ""
             job_event_messsage += colored("CrowdAI.Job.Event", "cyan", attrs=['bold'])+":  "
-            job_event_messsage += colored("JOB_ERROR", "red", attrs=['bold'])
+            job_event_messsage += colored("JOB_ERROR ("+job_id+")", "red", attrs=['bold'])
 
             if self.PROGRESS_BAR:
-                self.write_above_single_progress_bar(job_event_messsage)
+                self.write_above_single_progress_bar(sequence_no, job_event_messsage)
             raise CrowdAIExecuteFunctionError("Malformed response from server. \
                                             Please contact the server admins.\n")
 
@@ -131,7 +133,8 @@ class BaseChallenge(object):
             Timeout thresholds
         """
         if self.PROGRESS_BAR:
-            self.pbar = self.close_single_progress_bar()
+            self.close_all_progress_bars()
+
         if args["job_state"] == JobStates.ERROR:
             # TODO: Possible to raise different kinds of errors by matching
             # the beginning of the message to custom string markers
@@ -145,7 +148,7 @@ class BaseChallenge(object):
 
         # Instantiate Progressbar
         if self.PROGRESS_BAR:
-            self.instantiate_single_progressbar()
+            self.instantiate_progress_bars(len(data))
 
         #NOTE: response_channel is prepended with the session_key to discourage hijacking attempts
         self.socketio.on(self.session_key+"::"+self.response_channel, self.on_execute_function_response)
@@ -169,29 +172,33 @@ class BaseChallenge(object):
         #    response = self.execute_function_response
         #    return response["response"]
 
-    def instantiate_single_progressbar(self):
-        self.pbar = tqdm(total=100, dynamic_ncols=True, unit="% ", \
-                         bar_format="{desc}{percentage:3.0f}% "\
-                         "|{bar}|" \
-                        #  "{n_fmt}/{total_fmt}" \
-                         "[{elapsed}<{remaining}] "\
-                         " {rate_fmt}] "\
-                         ""\
-                         )
-        self.last_reported_progress = 0
+    def instantiate_progress_bars(self, number):
+        self.pbar = []
+        self.last_reported_progress = []
+        for k in range(number):
+            self.pbar.append(tqdm(total=100, dynamic_ncols=True, unit="% ", \
+                             bar_format="{desc}{percentage:3.0f}% "\
+                             "|{bar}|" \
+                            #  "{n_fmt}/{total_fmt}" \
+                             "[{elapsed}<{remaining}] "\
+                             " {rate_fmt}] "\
+                             ""\
+                             ))
+            self.last_reported_progress.append(0)
 
-    def close_single_progress_bar(self):
-        self.pbar.close()
-        self.last_reported_progress = 0
+    def close_all_progress_bars(self):
+        for _idx, _pbar in enumerate(self.pbar):
+            _pbar.close()
+            self.last_reported_progress[_idx] = 0
 
-    def update_single_progress_bar(self, percent_complete):
-        if percent_complete > self.last_reported_progress:
-            update_length = int(percent_complete)- self.last_reported_progress
-            self.pbar.update(update_length)
-            self.last_reported_progress += update_length
+    def update_single_progress_bar(self, seq_no, percent_complete):
+        if percent_complete > self.last_reported_progress[seq_no]:
+            update_length = int(percent_complete)- self.last_reported_progress[seq_no]
+            self.pbar[seq_no].update(update_length)
+            self.last_reported_progress[seq_no] += update_length
 
-    def write_above_single_progress_bar(self, line):
+    def write_above_single_progress_bar(self, seq_no, line):
         tqdm.write(line)
 
-    def update_single_progress_bar_description(self, line):
-        self.pbar.set_description(line)
+    def update_single_progress_bar_description(self, seq_no, line):
+        self.pbar[seq_no].set_description(line)
