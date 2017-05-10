@@ -18,6 +18,7 @@ class BaseChallenge(object):
         self.session_key = None
         self.latest_response = False
         self.pbar = None
+        self.PROGRESS_BAR=True
 
     def _connect(self):
         self.socketio = SocketIO(self.config['remote_host'], self.config['remote_port'], LoggingNamespace)
@@ -25,6 +26,10 @@ class BaseChallenge(object):
     def _authenticate_response(self, args):
         if args["status"] == True:
             self.session_key = args["session_token"]
+            authentication_successful_message = ""
+            authentication_successful_message += colored("CrowdAI.Authentication.Event", "cyan", attrs=['bold'])+":  "
+            authentication_successful_message += colored("Authentication Successful", "green", attrs=['bold'])
+            print authentication_successful_message
         else:
             # TO-DO: Log authentication error
             raise CrowdAIAuthenticationError(args["message"])
@@ -65,7 +70,8 @@ class BaseChallenge(object):
             job_event_messsage += colored("CrowdAI.Job.Event", "cyan", attrs=['bold'])+":  "
             job_event_messsage += colored("JOB_ENQUEUED ("+job_id+")", "yellow", attrs=['bold'])
 
-            self.write_above_single_progress_bar(job_event_messsage)
+            if self.PROGRESS_BAR:
+                self.write_above_single_progress_bar(job_event_messsage)
 
             # job_event_messsage = ""
             # job_event_messsage += colored("CrowdAI.Job.Event", "cyan", attrs=['bold'])+":  "
@@ -78,34 +84,44 @@ class BaseChallenge(object):
             job_event_messsage += colored("CrowdAI.Job.Event", "cyan", attrs=['bold'])+":  "
             job_event_messsage += colored("JOB_RUNNING", "blue", attrs=['bold'])
 
-            self.write_above_single_progress_bar(job_event_messsage)
-            self.update_single_progress_bar_description(colored(job_id, 'green', attrs=['bold']))
+            if self.PROGRESS_BAR:
+                self.write_above_single_progress_bar(job_event_messsage)
+                self.update_single_progress_bar_description(colored(job_id, 'green', attrs=['bold']))
         elif job_state == JobStates.PROGRESS_UPDATE :
-            self.update_single_progress_bar(payload["data"]["percent_complete"])
-            self.update_single_progress_bar_description(colored(job_id, 'green', attrs=['bold']))
+            if self.PROGRESS_BAR:
+                self.update_single_progress_bar(payload["data"]["percent_complete"])
+                self.update_single_progress_bar_description(colored(job_id, 'green', attrs=['bold']))
         elif job_state == JobStates.COMPLETE :
-            self.update_single_progress_bar(100)
+            if self.PROGRESS_BAR:
+                self.update_single_progress_bar(100)
             job_event_messsage = ""
             job_event_messsage += colored("CrowdAI.Job.Event", "cyan", attrs=['bold'])+":  "
             job_event_messsage += colored("JOB_COMPLETE", "green", attrs=['bold'])
 
-            self.write_above_single_progress_bar(job_event_messsage)
-            self.update_single_progress_bar_description(colored(job_id, 'green', attrs=['bold']))
+            if self.PROGRESS_BAR:
+                self.write_above_single_progress_bar(job_event_messsage)
+                self.update_single_progress_bar_description(colored(job_id, 'green', attrs=['bold']))
         elif job_state == JobStates.INFO:
             job_event_messsage = ""
             job_event_messsage += colored("CrowdAI.Job.Event", "cyan", attrs=['bold'])+":  "
             job_event_messsage += colored("JOB_INFO", "yellow", attrs=['bold']) +" "+payload["message"]
-            self.write_above_single_progress_bar(job_event_messsage)
+
+            if self.PROGRESS_BAR:
+                self.write_above_single_progress_bar(job_event_messsage)
         elif job_state == JobStates.TIMEOUT:
             job_event_messsage = ""
             job_event_messsage += colored("CrowdAI.Job.Event", "cyan", attrs=['bold'])+":  "
             job_event_messsage += colored("JOB_INFO", "red", attrs=['bold']) +" "+payload["message"]
-            self.write_above_single_progress_bar(job_event_messsage)
+
+            if self.PROGRESS_BAR:
+                self.write_above_single_progress_bar(job_event_messsage)
         else:
             job_event_messsage = ""
             job_event_messsage += colored("CrowdAI.Job.Event", "cyan", attrs=['bold'])+":  "
             job_event_messsage += colored("JOB_ERROR", "red", attrs=['bold'])
-            self.write_above_single_progress_bar(job_event_messsage)
+
+            if self.PROGRESS_BAR:
+                self.write_above_single_progress_bar(job_event_messsage)
             raise CrowdAIExecuteFunctionError("Malformed response from server. \
                                             Please contact the server admins.\n")
 
@@ -114,7 +130,12 @@ class BaseChallenge(object):
             Placeholder function to be able to account for
             Timeout thresholds
         """
-        self.pbar = self.close_single_progress_bar()
+        if self.PROGRESS_BAR:
+            self.pbar = self.close_single_progress_bar()
+        if args["job_state"] == JobStates.ERROR:
+            # TODO: Possible to raise different kinds of errors by matching
+            # the beginning of the message to custom string markers
+            raise CrowdAIExecuteFunctionError(args["message"])
         return {}
 
     def execute_function(self, function_name, data, dry_run=False):
@@ -123,10 +144,10 @@ class BaseChallenge(object):
         #Prepare for response
 
         # Instantiate Progressbar
-        self.instantiate_single_progressbar()
+        if self.PROGRESS_BAR:
+            self.instantiate_single_progressbar()
 
         #NOTE: response_channel is prepended with the session_key to discourage hijacking attempts
-        #print "Listening on : ", self.session_key+"::"+self.response_channel
         self.socketio.on(self.session_key+"::"+self.response_channel, self.on_execute_function_response)
         self.execute_function_response = None
         self.socketio.emit('execute_function',
@@ -136,7 +157,8 @@ class BaseChallenge(object):
                             "challenge_id": self.challenge_id,
                             "function_name": function_name,
                             "data": data,
-                            "dry_run" : dry_run
+                            "dry_run" : dry_run,
+                            "parallel" : True #TODO==REFACTOR THIS !! #TODO #TODO#TODO#TODO#TODO#TODO#TODO#TODO#TODO#TODO#TODO#TODO#TODO#TODO#TODO
                         }, self.on_execute_function_response_complete)
 
         self.socketio.wait_for_callbacks(seconds=self.config['challenges'][self.challenge_id]["TIMEOUT_EXECUTION"])
