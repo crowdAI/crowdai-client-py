@@ -99,7 +99,7 @@ class BaseChallenge(object):
             job_event_messsage = ""
             job_event_messsage += colored("CrowdAI.Job.Event", "cyan", attrs=['bold'])+":  "
             job_event_messsage += colored("JOB_COMPLETE ("+job_id+")", "green", attrs=['bold'])
-
+            job_event_messsage += u"\U0001F37A \U0001F37A \U0001F37A"
             if self.PROGRESS_BAR:
                 self.write_above_single_progress_bar(sequence_no, job_event_messsage)
                 self.update_single_progress_bar_description(sequence_no, colored(job_id, 'green', attrs=['bold']))
