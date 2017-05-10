@@ -1,8 +1,10 @@
 appdirs==1.4.3
 click==6.7
-crowdai==0.1
+-e git+git@github.com:spMohanty/crowdai-client-py.git@9b9ee483ac6758591862d168e172d82709dec4ed#egg=crowdai
+e==1.4.5
 enum-compat==0.0.2
 enum34==1.1.6
+eventlet==0.21.0
 Flask==0.12.1
 Flask-SocketIO==2.8.6
 greenlet==0.4.12

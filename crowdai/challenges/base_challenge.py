@@ -21,6 +21,7 @@ class BaseChallenge(object):
         self.PROGRESS_BAR=True
 
     def _connect(self):
+        # TO-DO : Handle socketio connection and disconnection events
         self.socketio = SocketIO(self.config['remote_host'], self.config['remote_port'], LoggingNamespace)
 
     def _authenticate_response(self, args):
