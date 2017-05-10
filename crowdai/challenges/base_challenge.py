@@ -74,7 +74,7 @@ class BaseChallenge(object):
         elif job_state == JobStates.ENQUEUED :
             job_event_messsage = ""
             job_event_messsage += colored("CrowdAI.Job.Event", "cyan", attrs=['bold'])+":  "
-            job_event_messsage += colored("JOB_ENQUEUED ("+job_id+")", "yellow", attrs=['bold'])
+            job_event_messsage += colored("JOB_ENQUEUED ", "yellow", attrs=['bold'])+"("+job_id+") "
 
             if self.PROGRESS_BAR:
                 self.write_above_single_progress_bar(sequence_no, job_event_messsage)
@@ -88,7 +88,7 @@ class BaseChallenge(object):
         elif job_state == JobStates.RUNNING :
             job_event_messsage = ""
             job_event_messsage += colored("CrowdAI.Job.Event", "cyan", attrs=['bold'])+":  "
-            job_event_messsage += colored("JOB_RUNNING ("+job_id+")", "blue", attrs=['bold'])
+            job_event_messsage += colored("JOB_RUNNING ", "blue", attrs=['bold'])+"("+job_id+") "
 
             if self.PROGRESS_BAR:
                 self.write_above_single_progress_bar(sequence_no, job_event_messsage)
@@ -106,7 +106,7 @@ class BaseChallenge(object):
             # When sequence number is less than 0, it is a JOB_COMPLETE event which is not associated with any
             # current jobs
             if sequence_no >= 0:
-                job_event_messsage += colored("JOB_COMPLETE ("+job_id+")", "green", attrs=['bold'])
+                job_event_messsage += colored("JOB_COMPLETE " , "green", attrs=['bold'])+"("+job_id+") "
                 job_event_messsage += u"\t   \U0001F37A "
             else:
                 job_event_messsage += colored("JOB_COMPLETE :: "+message+"", "green", attrs=['bold'])
@@ -117,7 +117,7 @@ class BaseChallenge(object):
         elif job_state == JobStates.INFO:
             job_event_messsage = ""
             job_event_messsage += colored("CrowdAI.Job.Event", "cyan", attrs=['bold'])+":  "
-            job_event_messsage += colored("JOB_INFO ("+job_id+")", "yellow", attrs=['bold']) +" "+payload["message"]
+            job_event_messsage += colored("JOB_INFO ("+job_id+") " + payload["message"], "yellow", attrs=['bold']) 
 
             if self.PROGRESS_BAR:
                 self.write_above_single_progress_bar(sequence_no, job_event_messsage)
@@ -136,7 +136,7 @@ class BaseChallenge(object):
             if self.PROGRESS_BAR:
                 self.write_above_single_progress_bar(sequence_no, job_event_messsage)
             raise CrowdAIExecuteFunctionError("Malformed response from server. \
-                                            Please contact the server admins.\n")
+                                            Please update your crowdai package, and if the problem still persists contact the server admins.\n")
 
     def on_execute_function_response_complete(self, args):
         """
