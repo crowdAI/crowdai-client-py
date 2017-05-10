@@ -117,7 +117,7 @@ class BaseChallenge(object):
         elif job_state == JobStates.INFO:
             job_event_messsage = ""
             job_event_messsage += colored("CrowdAI.Job.Event", "cyan", attrs=['bold'])+":  "
-            job_event_messsage += colored("JOB_INFO ("+job_id+") " + payload["message"], "yellow", attrs=['bold']) 
+            job_event_messsage += colored("JOB_INFO ("+job_id+") " + payload["message"], "yellow", attrs=['bold'])
 
             if self.PROGRESS_BAR:
                 self.write_above_single_progress_bar(sequence_no, job_event_messsage)
@@ -221,7 +221,10 @@ class BaseChallenge(object):
             self.last_reported_progress[_idx] = 0
 
     def update_single_progress_bar(self, seq_no, percent_complete):
-        if seq_no < 0 :
+        try:
+            if seq_no != -1:
+                foo = self.last_reported_progress[seq_no]
+        except:
             return
 
         if percent_complete > self.last_reported_progress[seq_no]:
@@ -233,6 +236,9 @@ class BaseChallenge(object):
         tqdm.write(line)
 
     def update_single_progress_bar_description(self, seq_no, line):
-        if seq_no < 0 :
+        try:
+            if seq_no != -1:
+                foo = self.last_reported_progress[seq_no]
+        except:
             return
         self.pbar[seq_no].set_description(line)
