@@ -24,7 +24,7 @@ class BaseChallenge(object):
         self.socketio = SocketIO(self.config['remote_host'], self.config['remote_port'], LoggingNamespace)
 
     def _authenticate_response(self, args):
-        if args["status"] == True:
+        if args["job_state"] == JobStates.COMPLETE:
             self.session_key = args["session_token"]
             authentication_successful_message = ""
             authentication_successful_message += colored("CrowdAI.Authentication.Event", "cyan", attrs=['bold'])+":  "
@@ -59,11 +59,15 @@ class BaseChallenge(object):
             # Temporarily ignore printing session_key
             # TO-DO: Log authentication successful
 
-    def on_execute_function_response(self, channel_name, payload):
+    def on_execute_function_response(self, channel_name, payload={}):
+        if payload == {}:# TODO: Critical This is a hacky fix. We need to find the exact reason why post-submit events are not in this format.
+            payload = channel_name
+
         payload = json.loads(payload)
         job_state = payload['job_state']
         job_id = payload['job_id']
         sequence_no = payload["data_sequence_no"] #Sequence No being the index of the corresponding input data point in the parallel execution array
+        message = payload["message"]
 
         if job_state == JobStates.ERROR:
             raise CrowdAIExecuteFunctionError(payload["message"])
@@ -98,8 +102,15 @@ class BaseChallenge(object):
                 self.update_single_progress_bar(sequence_no, 100)
             job_event_messsage = ""
             job_event_messsage += colored("CrowdAI.Job.Event", "cyan", attrs=['bold'])+":  "
-            job_event_messsage += colored("JOB_COMPLETE ("+job_id+")", "green", attrs=['bold'])
-            job_event_messsage += u"\U0001F37A \U0001F37A \U0001F37A"
+
+            # When sequence number is less than 0, it is a JOB_COMPLETE event which is not associated with any
+            # current jobs
+            if sequence_no >= 0:
+                job_event_messsage += colored("JOB_COMPLETE ("+job_id+")", "green", attrs=['bold'])
+                job_event_messsage += u"\t   \U0001F37A "
+            else:
+                job_event_messsage += colored("JOB_COMPLETE :: "+message+"", "green", attrs=['bold'])
+                job_event_messsage += u"\t   \U0001F37A \U0001F37A \U0001F37A"
             if self.PROGRESS_BAR:
                 self.write_above_single_progress_bar(sequence_no, job_event_messsage)
                 self.update_single_progress_bar_description(sequence_no, colored(job_id, 'green', attrs=['bold']))
@@ -210,6 +221,9 @@ class BaseChallenge(object):
             self.last_reported_progress[_idx] = 0
 
     def update_single_progress_bar(self, seq_no, percent_complete):
+        if seq_no < 0 :
+            return
+
         if percent_complete > self.last_reported_progress[seq_no]:
             update_length = int(percent_complete)- self.last_reported_progress[seq_no]
             self.pbar[seq_no].update(update_length)
@@ -219,4 +233,6 @@ class BaseChallenge(object):
         tqdm.write(line)
 
     def update_single_progress_bar_description(self, seq_no, line):
+        if seq_no < 0 :
+            return
         self.pbar[seq_no].set_description(line)
