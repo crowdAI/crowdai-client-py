@@ -12,7 +12,7 @@ import pkg_resources
 
 class BaseChallenge(object):
     def __init__(self, challenge_id, api_key, config):
-        self.api_key = api_key
+        self.api_key = str(api_key).strip()
         self.challenge_id = challenge_id
         self.config = config
         self.session_key = None
@@ -23,6 +23,8 @@ class BaseChallenge(object):
     def _connect(self):
         # TO-DO : Handle socketio connection and disconnection events
         self.socketio = SocketIO(self.config['remote_host'], self.config['remote_port'], LoggingNamespace)
+    def _disconnect(self):
+        self.socketio.disconnect()
 
     def _authenticate_response(self, args):
         if args["job_state"] == JobStates.COMPLETE:
@@ -33,6 +35,7 @@ class BaseChallenge(object):
             print authentication_successful_message
         else:
             # TO-DO: Log authentication error
+            self.disconnect()
             raise CrowdAIAuthenticationError(args["message"])
 
     def _authenticate(self):
@@ -50,6 +53,7 @@ class BaseChallenge(object):
         self.socketio.wait_for_callbacks(seconds=self.config['TIMEOUT_AUTHENTICATE'])
         if self.session_key == None:
             # TO-DO: Log authentication error
+            self.disconnect()
             raise CrowdAIAuthenticationError("Authentication Timeout")
         else:
             # session_key_message = ""
@@ -71,6 +75,7 @@ class BaseChallenge(object):
         message = payload["message"]
 
         if job_state == JobStates.ERROR:
+            self.disconnect()
             raise CrowdAIExecuteFunctionError(payload["message"])
         elif job_state == JobStates.ENQUEUED :
             job_event_messsage = ""
