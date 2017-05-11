@@ -98,3 +98,4 @@ ENV/
 
 # mkdocs documentation
 /site
+env/
