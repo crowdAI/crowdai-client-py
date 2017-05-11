@@ -113,10 +113,20 @@ class BaseChallenge(object):
             # current jobs
             if sequence_no >= 0:
                 job_event_messsage += colored("JOB_COMPLETE " , "green", attrs=['bold'])+"("+job_id+") "
-                job_event_messsage += u"\t   \U0001F37A "
+                try:
+                    job_event_messsage += u"\t   \U0001F37A "
+                except Exception as e:
+                    # If the client doesnt have the relevant codecs for rendering this,
+                    # Then dont make a whole mess about it.
+                    pass
             else:
                 job_event_messsage += colored("JOB_COMPLETE :: "+message+"", "green", attrs=['bold'])
-                job_event_messsage += u"\t   \U0001F37A \U0001F37A \U0001F37A"
+                try:
+                    job_event_messsage += u"\t   \U0001F37A \U0001F37A \U0001F37A"
+                except Exception as e:
+                    # If the client doesnt have the relevant codecs for rendering this,
+                    # Then dont make a whole mess about it.
+                    pass
             if self.PROGRESS_BAR:
                 self.write_above_single_progress_bar(sequence_no, job_event_messsage)
                 self.update_single_progress_bar_description(sequence_no, colored(job_id, 'green', attrs=['bold']))
