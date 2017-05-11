@@ -1,4 +1,4 @@
-class JobStates:
+class JobStates(object):
     ENQUEUED="crowdai.job_state.ENQUEUED"
     WAITING="crowdai.job_state.WAITING"
     RUNNING="crowdai.job_state.RUNNING"

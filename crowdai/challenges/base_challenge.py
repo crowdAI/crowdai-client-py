@@ -2,6 +2,11 @@ from socketIO_client import SocketIO, LoggingNamespace
 import uuid
 from crowdai_errors import *
 from job_states import JobStates
+from response_types import CrowdAIResponseEvent
+from events import CrowdAIEvents
+
+import logging_helpers as lh
+
 import json
 
 from tqdm import tqdm
@@ -20,49 +25,51 @@ class BaseChallenge(object):
         self.pbar = None
         self.PROGRESS_BAR=True
 
+    def on_connect(self):
+        print lh.success(CrowdAIEvents.Connection["CONNECTED"], "")
+    def on_disconnect(self):
+        print lh.error(CrowdAIEvents.Connection["DISCONNECTED"], "Retrying to connect.....")
+    def on_reconnect(self):
+        print lh.success(CrowdAIEvents.Connection["RECONNECTED"], "")
+
     def _connect(self):
         # TO-DO : Handle socketio connection and disconnection events
         self.socketio = SocketIO(self.config['remote_host'], self.config['remote_port'], LoggingNamespace)
+        self.socketio.on('connect', self.on_connect)
+        self.socketio.on('disconnect', self.on_disconnect)
+        self.socketio.on('reconnect', self.on_reconnect)
+
     def disconnect(self):
         self.socketio.disconnect()
 
     def _authenticate_response(self, args):
-        if args["job_state"] == JobStates.COMPLETE:
+        if args["response_type"] == CrowdAIResponseEvent.SUCCESS:
             self.session_key = args["session_token"]
-            authentication_successful_message = ""
-            authentication_successful_message += colored("CrowdAI.Authentication.Event", "cyan", attrs=['bold'])+":  "
-            authentication_successful_message += colored("Authentication Successful", "green", attrs=['bold'])
-            print authentication_successful_message
+            print lh.success(CrowdAIEvents.Authentication["SUCCESS"], "Authentication Successful")
         else:
             # TO-DO: Log authentication error
+            print lh.error(CrowdAIEvents.Authentication["ERROR"], args["message"])
             self.disconnect()
             raise CrowdAIAuthenticationError(args["message"])
 
+    def _authenticate_response_placeholder(self, args):
+        pass
+
     def _authenticate(self):
-        begin_authentication_message = ""
-        begin_authentication_message += colored("CrowdAI.Authentication.Event", "cyan", attrs=['bold'])+":  "
-        begin_authentication_message += "Authenticating for challenge = "
-        begin_authentication_message += colored(self.challenge_id, "blue", attrs=['bold', 'underline'])
-        print begin_authentication_message
+        print lh.info(CrowdAIEvents.Authentication[""],
+                        "Authenticating for challenge = "+colored(self.challenge_id, "blue", attrs=['bold', 'underline']))
 
         self.session_key = None
+        self.socketio.on('authenticate_response', self._authenticate_response)
         self.socketio.emit('authenticate', {"API_KEY":self.api_key,
                                            "challenge_id": self.challenge_id,
                                            "client_version":pkg_resources.get_distribution("crowdai").version},
-                                           self._authenticate_response)
+                                           self._authenticate_response_placeholder)
         self.socketio.wait_for_callbacks(seconds=self.config['TIMEOUT_AUTHENTICATE'])
         if self.session_key == None:
             # TO-DO: Log authentication error
             self.disconnect()
             raise CrowdAIAuthenticationError("Authentication Timeout")
-        else:
-            # session_key_message = ""
-            # session_key_message += colored("CrowdAI.Authentication.Event", "blue", attrs=['bold'])+":  "
-            # session_key_message += "session_key="+colored(self.session_key, "blue", attrs=['bold'])
-            # print session_key_message
-            pass
-            # Temporarily ignore printing session_key
-            # TO-DO: Log authentication successful
 
     def on_execute_function_response(self, channel_name, payload={}):
         if payload == {}:# TODO: Critical This is a hacky fix. We need to find the exact reason why post-submit events are not in this format.
