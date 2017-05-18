@@ -26,6 +26,7 @@ class BaseChallenge(object):
         self.latest_response = False
         self.pbar = None
         self.PROGRESS_BAR=True
+        self.AGGREGATED_PROGRESS_BAR=False
 
     def on_connect(self):
         print lh.success(CrowdAIEvents.Connection["CONNECTED"], "")
@@ -93,14 +94,15 @@ class BaseChallenge(object):
             job_event_messsage = lh.info_blue(job_state, job_id)
             if self.PROGRESS_BAR:
                 self.write_above_single_progress_bar(sequence_no, job_event_messsage)
-                self.update_single_progress_bar_description(sequence_no, colored(job_id, 'green', attrs=['bold']))
+                if not self.AGGREGATED_PROGRESS_BAR:
+                    self.update_single_progress_bar_description(sequence_no, colored(job_id, 'green', attrs=['bold']))
         elif job_state == CrowdAIEvents.Job["PROGRESS_UPDATE"]:
+            self.update_progress_tracker(sequence_no, payload["data"]["percent_complete"])
             if self.PROGRESS_BAR:
-                self.update_single_progress_bar(sequence_no, payload["data"]["percent_complete"])
-                self.update_single_progress_bar_description(sequence_no, colored(job_id, 'green', attrs=['bold']))
+                if not self.AGGREGATED_PROGRESS_BAR:
+                    self.update_single_progress_bar_description(sequence_no, colored(job_id, 'green', attrs=['bold']))
         elif job_state == CrowdAIEvents.Job["COMPLETE"]:
-            if self.PROGRESS_BAR:
-                self.update_single_progress_bar(sequence_no, 100)
+            self.update_progress_tracker(sequence_no, 100)
             job_event_messsage = lh.success(job_state, job_id)
             safe_job_event_messsage = job_event_messsage
             # When sequence number is less than 0, it is a JOB_COMPLETE event which is not associated with any
@@ -119,7 +121,8 @@ class BaseChallenge(object):
                     # If the client doesnt have the relevant codecs for rendering this,
                     # Then dont make a whole mess about it, and instead print the safe_job_event_messsage.
                     self.write_above_single_progress_bar(sequence_no, safe_job_event_messsage)
-                self.update_single_progress_bar_description(sequence_no, colored(job_id, 'green', attrs=['bold']))
+                if not self.AGGREGATED_PROGRESS_BAR:
+                    self.update_single_progress_bar_description(sequence_no, colored(job_id, 'green', attrs=['bold']))
         elif job_state == CrowdAIEvents.Job["INFO"]:
             job_event_messsage = lh.info(job_state, "("+job_id+") "+payload["message"])
             if self.PROGRESS_BAR:
@@ -158,12 +161,7 @@ class BaseChallenge(object):
         #Prepare for response
         self.aggregated_responses = False
 
-        # Instantiate Progressbar
-        if self.PROGRESS_BAR:
-            number_of_processes = 1
-            if parallel:
-                number_of_processes = len(data)
-            self.instantiate_progress_bars(number_of_processes)
+        self.instantiate_progress_bars(len(data))
 
         self.socketio.on(self.response_channel, self.on_execute_function_response)
         self.execute_function_response = None
@@ -191,9 +189,45 @@ class BaseChallenge(object):
                 return self.aggregated_responses
             time.sleep(2)
 
-    def instantiate_progress_bars(self, number):
-        self.pbar = []
+    def instantiate_progress_trackers(self, number):
         self.last_reported_progress = []
+        for k in range(number):
+            self.last_reported_progress.append(0)
+        self.last_reported_mean_progress = 0
+
+    def update_progress_tracker(self, seq_no, value):
+        diff = 0
+        if value > self.last_reported_progress[seq_no]:
+            diff = value - self.last_reported_progress[seq_no]
+            self.last_reported_progress[seq_no] = value
+
+        if self.PROGRESS_BAR:
+            if self.AGGREGATED_PROGRESS_BAR:
+                _mean = sum(self.last_reported_progress)*1.0/len(self.last_reported_progress)
+                if _mean > self.last_reported_mean_progress:
+                    diff = _mean - self.last_reported_mean_progress
+                    self.last_reported_mean_progress = _mean
+                self.update_single_progress_bar(0, diff)
+            else:
+                self.update_single_progress_bar(seq_no, diff)
+
+    def instantiate_progress_bars(self, number):
+        self.instantiate_progress_trackers(number)
+
+        if self.PROGRESS_BAR:
+            """
+                Instantiate only of Progress Bars are enabled
+            """
+            if self.AGGREGATED_PROGRESS_BAR:
+                """
+                    Force set numnber of progress bars to 1
+                    if AGGREGATED_PROGRESS_BAR is enabled
+                """
+                number = 1
+        else:
+            return
+
+        self.pbar = []
         for k in range(number):
             self.pbar.append(tqdm(total=100, dynamic_ncols=True, unit="% ", \
                              bar_format="{desc}{percentage:3.0f}% "\
@@ -203,24 +237,18 @@ class BaseChallenge(object):
                              " {rate_fmt}] "\
                              ""\
                              ))
-            self.last_reported_progress.append(0)
 
     def close_all_progress_bars(self):
         for _idx, _pbar in enumerate(self.pbar):
             _pbar.close()
-            self.last_reported_progress[_idx] = 0
 
-    def update_single_progress_bar(self, seq_no, percent_complete):
+    def update_single_progress_bar(self, seq_no, diff):
         try:
             if seq_no != -1:
                 foo = self.last_reported_progress[seq_no]
         except:
             return
-
-        if percent_complete > self.last_reported_progress[seq_no]:
-            update_length = int(percent_complete)- self.last_reported_progress[seq_no]
-            self.pbar[seq_no].update(update_length)
-            self.last_reported_progress[seq_no] += update_length
+        self.pbar[seq_no].update(diff)
 
     def write_above_single_progress_bar(self, seq_no, line):
         tqdm.write(line)
