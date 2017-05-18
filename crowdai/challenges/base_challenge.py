@@ -145,9 +145,9 @@ class BaseChallenge(object):
 
         self._aggregated_responses = []
         for _val in args:
-            _item = {}
+            _item = _val['data']
             _item['job_state'] = _val['response_type']
-            _item['data'] = _val['data']
+            _item['message'] = _val['message']
             self._aggregated_responses.append(_item)
         self.aggregated_responses = self._aggregated_responses
         return {}
