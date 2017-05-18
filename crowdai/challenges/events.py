@@ -1,4 +1,9 @@
 class CrowdAIEvents(object):
+    Event = {
+        "" : "CrowdAI.Event",
+        "SUCCESS" : "CrowdAI.Event.SUCCESS",
+        "ERROR" : "CrowdAI.Event.ERROR"
+    },
     Connection = {
         "":"CrowdAI.Event.Connection",
         "BEGIN":"CrowdAI.Event.Connection.BEGIN",
