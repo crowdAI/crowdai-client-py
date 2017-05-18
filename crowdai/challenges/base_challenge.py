@@ -217,13 +217,6 @@ class BaseChallenge(object):
                 return self.aggregated_responses
             time.sleep(2)
 
-        #if self.execute_function_response == None:
-        #    raise CrowdAIExecuteFunctionError("Evaluation Request Timeout")
-        #    # print "Evaluation Request Timed Out..."
-        #else:
-        #    response = self.execute_function_response
-        #    return response["response"]
-
     def instantiate_progress_bars(self, number):
         self.pbar = []
         self.last_reported_progress = []
