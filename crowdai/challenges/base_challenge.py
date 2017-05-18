@@ -14,6 +14,8 @@ from termcolor import colored, cprint
 
 import pkg_resources
 
+import time
+
 
 class BaseChallenge(object):
     def __init__(self, challenge_id, api_key, config):
@@ -28,7 +30,7 @@ class BaseChallenge(object):
     def on_connect(self):
         print lh.success(CrowdAIEvents.Connection["CONNECTED"], "")
     def on_disconnect(self):
-        print lh.error(CrowdAIEvents.Connection["DISCONNECTED"], "Retrying to connect.....")
+        print lh.error(CrowdAIEvents.Connection["DISCONNECTED"], "")
     def on_reconnect(self):
         print lh.success(CrowdAIEvents.Connection["RECONNECTED"], "")
 
@@ -43,7 +45,7 @@ class BaseChallenge(object):
         self.socketio.disconnect()
 
     def _authenticate_response(self, args):
-        if args["response_type"] == CrowdAIResponseEvent.SUCCESS:
+        if args["response_type"] == CrowdAIEvents.Authentication["SUCCESS"]:
             self.session_key = args["session_token"]
             print lh.success(CrowdAIEvents.Authentication["SUCCESS"], "Authentication Successful")
         else:
@@ -76,15 +78,14 @@ class BaseChallenge(object):
             payload = channel_name
 
         payload = json.loads(payload)
-        job_state = payload['job_state']
+        job_state = payload['response_type']
         job_id = payload['job_id']
         sequence_no = payload["data_sequence_no"] #Sequence No being the index of the corresponding input data point in the parallel execution array
         message = payload["message"]
-
-        if job_state == JobStates.ERROR:
+        if job_state == CrowdAIEvents.Job["ERROR"]:
             self.disconnect()
             raise CrowdAIExecuteFunctionError(payload["message"])
-        elif job_state == JobStates.ENQUEUED :
+        elif job_state == CrowdAIEvents.Job["ENQUEUED"]:
             job_event_messsage = ""
             job_event_messsage += colored("CrowdAI.Job.Event", "cyan", attrs=['bold'])+":  "
             job_event_messsage += colored("JOB_ENQUEUED ", "yellow", attrs=['bold'])+"("+job_id+") "
@@ -98,7 +99,7 @@ class BaseChallenge(object):
             #
             # self.write_above_single_progress_bar(sequence_no, job_event_messsage)
             # self.update_single_progress_bar_description(sequence_no, colored(job_id, 'green', attrs=['bold']))
-        elif job_state == JobStates.RUNNING :
+        elif job_state == CrowdAIEvents.Job["RUNNING"]:
             job_event_messsage = ""
             job_event_messsage += colored("CrowdAI.Job.Event", "cyan", attrs=['bold'])+":  "
             job_event_messsage += colored("JOB_RUNNING ", "blue", attrs=['bold'])+"("+job_id+") "
@@ -106,11 +107,11 @@ class BaseChallenge(object):
             if self.PROGRESS_BAR:
                 self.write_above_single_progress_bar(sequence_no, job_event_messsage)
                 self.update_single_progress_bar_description(sequence_no, colored(job_id, 'green', attrs=['bold']))
-        elif job_state == JobStates.PROGRESS_UPDATE :
+        elif job_state == CrowdAIEvents.Job["PROGRESS_UPDATE"]:
             if self.PROGRESS_BAR:
                 self.update_single_progress_bar(sequence_no, payload["data"]["percent_complete"])
                 self.update_single_progress_bar_description(sequence_no, colored(job_id, 'green', attrs=['bold']))
-        elif job_state == JobStates.COMPLETE :
+        elif job_state == CrowdAIEvents.Job["COMPLETE"]:
             if self.PROGRESS_BAR:
                 self.update_single_progress_bar(sequence_no, 100)
             job_event_messsage = ""
@@ -135,14 +136,14 @@ class BaseChallenge(object):
                     # Then dont make a whole mess about it, and instead print the safe_job_event_messsage.
                     self.write_above_single_progress_bar(sequence_no, safe_job_event_messsage)
                 self.update_single_progress_bar_description(sequence_no, colored(job_id, 'green', attrs=['bold']))
-        elif job_state == JobStates.INFO:
+        elif job_state == CrowdAIEvents.Job["INFO"]:
             job_event_messsage = ""
             job_event_messsage += colored("CrowdAI.Job.Event", "cyan", attrs=['bold'])+":  "
             job_event_messsage += colored("JOB_INFO ("+job_id+") " + payload["message"], "yellow", attrs=['bold'])
 
             if self.PROGRESS_BAR:
                 self.write_above_single_progress_bar(sequence_no, job_event_messsage)
-        elif job_state == JobStates.TIMEOUT:
+        elif job_state == CrowdAIEvents.Job["TIMEOUT"]:
             job_event_messsage = ""
             job_event_messsage += colored("CrowdAI.Job.Event", "cyan", attrs=['bold'])+":  "
             job_event_messsage += colored("JOB_INFO ("+job_id+")", "red", attrs=['bold']) +" "+payload["message"]
@@ -167,12 +168,13 @@ class BaseChallenge(object):
         if self.PROGRESS_BAR:
             self.close_all_progress_bars()
 
-        if args["job_state"] == JobStates.ERROR:
-            # TODO: Possible to raise different kinds of errors by matching
-            # the beginning of the message to custom string markers
-            raise CrowdAIExecuteFunctionError(args["message"])
-        if args["job_state"] == JobStates.COMPLETE:
-            self.aggregated_responses = args["data"]
+        self._aggregated_responses = []
+        for _val in args:
+            _item = {}
+            _item['job_state'] = _val['response_type']
+            _item['data'] = _val['data']
+            self._aggregated_responses.append(_item)
+        self.aggregated_responses = self._aggregated_responses
         return {}
 
     def execute_function(self, function_name, data, dry_run=False, parallel=False):
@@ -188,8 +190,8 @@ class BaseChallenge(object):
                 number_of_processes = len(data)
             self.instantiate_progress_bars(number_of_processes)
 
-        #NOTE: response_channel is prepended with the session_key to discourage hijacking attempts
-        self.socketio.on(self.session_key+"::"+self.response_channel, self.on_execute_function_response)
+        print "Listening for response at :", self.response_channel
+        self.socketio.on(self.response_channel, self.on_execute_function_response)
         self.execute_function_response = None
         self.socketio.emit('execute_function',
                         {   "response_channel" : self.response_channel,
