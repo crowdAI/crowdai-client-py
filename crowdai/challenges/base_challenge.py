@@ -86,24 +86,11 @@ class BaseChallenge(object):
             self.disconnect()
             raise CrowdAIExecuteFunctionError(payload["message"])
         elif job_state == CrowdAIEvents.Job["ENQUEUED"]:
-            job_event_messsage = ""
-            job_event_messsage += colored("CrowdAI.Job.Event", "cyan", attrs=['bold'])+":  "
-            job_event_messsage += colored("JOB_ENQUEUED ", "yellow", attrs=['bold'])+"("+job_id+") "
-
+            job_event_messsage = lh.info_yellow(job_state, job_id);
             if self.PROGRESS_BAR:
                 self.write_above_single_progress_bar(sequence_no, job_event_messsage)
-
-            # job_event_messsage = ""
-            # job_event_messsage += colored("CrowdAI.Job.Event", "cyan", attrs=['bold'])+":  "
-            # job_event_messsage += "job_id = " + colored(job_id, "yellow", attrs=['bold'])
-            #
-            # self.write_above_single_progress_bar(sequence_no, job_event_messsage)
-            # self.update_single_progress_bar_description(sequence_no, colored(job_id, 'green', attrs=['bold']))
         elif job_state == CrowdAIEvents.Job["RUNNING"]:
-            job_event_messsage = ""
-            job_event_messsage += colored("CrowdAI.Job.Event", "cyan", attrs=['bold'])+":  "
-            job_event_messsage += colored("JOB_RUNNING ", "blue", attrs=['bold'])+"("+job_id+") "
-
+            job_event_messsage = lh.info_blue(job_state, job_id)
             if self.PROGRESS_BAR:
                 self.write_above_single_progress_bar(sequence_no, job_event_messsage)
                 self.update_single_progress_bar_description(sequence_no, colored(job_id, 'green', attrs=['bold']))
@@ -114,17 +101,14 @@ class BaseChallenge(object):
         elif job_state == CrowdAIEvents.Job["COMPLETE"]:
             if self.PROGRESS_BAR:
                 self.update_single_progress_bar(sequence_no, 100)
-            job_event_messsage = ""
-            job_event_messsage += colored("CrowdAI.Job.Event", "cyan", attrs=['bold'])+":  "
-
+            job_event_messsage = lh.success(job_state, job_id)
+            safe_job_event_messsage = job_event_messsage
             # When sequence number is less than 0, it is a JOB_COMPLETE event which is not associated with any
             # current jobs
             if sequence_no >= 0:
-                job_event_messsage += colored("JOB_COMPLETE " , "green", attrs=['bold'])+"("+job_id+") "
                 safe_job_event_messsage = job_event_messsage + "\t OK"
                 job_event_messsage += u"\t   \U0001F37A "
             else:
-                job_event_messsage += colored("JOB_COMPLETE :: "+message+"", "green", attrs=['bold'])
                 safe_job_event_messsage = job_event_messsage + "\t OK"
                 job_event_messsage += u"\t   \U0001F37A \U0001F37A \U0001F37A"
 
@@ -137,24 +121,15 @@ class BaseChallenge(object):
                     self.write_above_single_progress_bar(sequence_no, safe_job_event_messsage)
                 self.update_single_progress_bar_description(sequence_no, colored(job_id, 'green', attrs=['bold']))
         elif job_state == CrowdAIEvents.Job["INFO"]:
-            job_event_messsage = ""
-            job_event_messsage += colored("CrowdAI.Job.Event", "cyan", attrs=['bold'])+":  "
-            job_event_messsage += colored("JOB_INFO ("+job_id+") " + payload["message"], "yellow", attrs=['bold'])
-
+            job_event_messsage = lh.info(job_state, "("+job_id+") "+payload["message"])
             if self.PROGRESS_BAR:
                 self.write_above_single_progress_bar(sequence_no, job_event_messsage)
         elif job_state == CrowdAIEvents.Job["TIMEOUT"]:
-            job_event_messsage = ""
-            job_event_messsage += colored("CrowdAI.Job.Event", "cyan", attrs=['bold'])+":  "
-            job_event_messsage += colored("JOB_INFO ("+job_id+")", "red", attrs=['bold']) +" "+payload["message"]
-
+            job_event_messsage = lh.error(job_state, "("+job_id+") "+payload["message"])
             if self.PROGRESS_BAR:
                 self.write_above_single_progress_bar(sequence_no, job_event_messsage)
         else:
-            job_event_messsage = ""
-            job_event_messsage += colored("CrowdAI.Job.Event", "cyan", attrs=['bold'])+":  "
-            job_event_messsage += colored("JOB_ERROR ("+job_id+")", "red", attrs=['bold'])
-
+            job_event_messsage = lh.error(job_state, "("+job_id+") "+str(payload["message"]))
             if self.PROGRESS_BAR:
                 self.write_above_single_progress_bar(sequence_no, job_event_messsage)
             raise CrowdAIExecuteFunctionError("Malformed response from server. \
@@ -190,7 +165,6 @@ class BaseChallenge(object):
                 number_of_processes = len(data)
             self.instantiate_progress_bars(number_of_processes)
 
-        print "Listening for response at :", self.response_channel
         self.socketio.on(self.response_channel, self.on_execute_function_response)
         self.execute_function_response = None
         self.socketio.emit('execute_function',

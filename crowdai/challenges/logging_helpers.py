@@ -18,7 +18,7 @@ def colored_line(event, event_color, message, message_color):
     text += colored(event, event_color, attrs=['bold'])
     if message != "":
         text+=" : "
-    
+
     if message_color == False:
         text += message
     else:
@@ -33,3 +33,9 @@ def error(event, message, message_color=False):
 
 def info(event, message, message_color=False):
     return colored_line(event, "cyan", message, message_color)
+
+def info_yellow(event, message, message_color=False):
+    return colored_line(event, "yellow", message, message_color)
+
+def info_blue(event, message, message_color=False):
+    return colored_line(event, "blue", message, message_color)
