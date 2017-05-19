@@ -2,7 +2,7 @@ from challenges.gecco_optimization_challenge_2017 import GeccoOptimizationChalle
 
 config = {
     'remote_host' : 'iccluster043.iccluster.epfl.ch',
-    'remote_port' : 5001,
+    'remote_port' : 9000,
     'TIMEOUT_AUTHENTICATE' : 10,
     'challenges' : {
         'GeccoOptimizationChallenge2017': {
