@@ -12,7 +12,7 @@ for r in parse_requirements('requirements.txt', session='hack'):
 
 
 setup(name='crowdai',
-      version='0.2',
+      version='1.0',
       description='Python client to interact with CrowdAI Grading Server.',
       url='https://github.com/spMohanty/crowdai-client-py',
       author='S.P. Mohanty',

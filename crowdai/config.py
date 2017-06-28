@@ -1,12 +1,12 @@
-from challenges.gecco_optimization_challenge_2017 import GeccoOptimizationChallenge2017
+from challenges.opensnp_challenge_2017 import OpenSNPChallenge2017
 
 config = {
-    'remote_host' : 'iccluster043.iccluster.epfl.ch',
-    'remote_port' : 9000,
+    'remote_host' : 'grader.crowdai.org',
+    'remote_port' : 80,
     'TIMEOUT_AUTHENTICATE' : 10,
     'challenges' : {
-        'GeccoOptimizationChallenge2017': {
-            "class": GeccoOptimizationChallenge2017,
+        'OpenSNPChallenge2017': {
+            "class": OpenSNPChallenge2017,
             "TIMEOUT_EXECUTION" : 20000
             }
     }
