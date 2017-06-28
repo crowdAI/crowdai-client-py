@@ -23,7 +23,7 @@ challenge.disconnect()
 ## Implemented Challenges and associated functions
 
 * OpenSNPChallenge2017
-  - submit
+  - `submit` :
     Submit the list of heights for the test set
 
 # Author
