@@ -4,7 +4,20 @@ Python client to interact with CrowdAI Grading Server.
 # Installation Instruction
 ```
 pip install crowdai
-#TODO : Add more detailed instructions
+```
+
+```
+import sys
+import crowdai
+
+api_key = "YOUR-API-KEY-HERE"
+challenge = crowdai.Challenge("CHALLENGE_ID", api_key)
+
+data = ...
+
+response = challenge.submit(data)
+print response
+challenge.disconnect()
 ```
 
 
