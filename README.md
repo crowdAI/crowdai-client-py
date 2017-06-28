@@ -20,7 +20,11 @@ print response
 challenge.disconnect()
 ```
 
+## Implemented Challenges and associated functions
 
+* OpenSNPChallenge2017
+  - submit
+    Submit the list of heights for the test set
 
 # Author
 S.P. Mohanty <sharada.mohanty@epfl.ch>
