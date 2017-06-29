@@ -11,4 +11,4 @@ class OpenSNPChallenge2017(BaseChallenge):
     def submit(self, data, dry_run=False):
         # Submit final score
         # Close socket.io connection
-        return self.execute_function('submit', data)
+        return self.execute_function('submit', [data])
