@@ -1,4 +1,8 @@
-from challenges.opensnp_challenge_2017 import OpenSNPChallenge2017
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+from .challenges.opensnp_challenge_2017 import OpenSNPChallenge2017
 
 config = {
     'remote_host' : 'grader.crowdai.org',
