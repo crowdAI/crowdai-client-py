@@ -3,7 +3,7 @@ from setuptools import setup
 
 def find_requirements():
     with open("requirements.txt") as _in:
-        required = [x.strip() for x in f.read().splitlines()]
+        required = [x.strip() for x in _in.read().splitlines()]
         return [x for x in required if x.strip() and not x.strip().startswith("#")]
 
 
