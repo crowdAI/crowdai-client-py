@@ -1,4 +1,4 @@
-from base_challenge import BaseChallenge
+from .base_challenge import BaseChallenge
 
 class OpenSNPChallenge2017(BaseChallenge):
     def __init__(self, api_key, config):

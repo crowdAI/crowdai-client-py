@@ -1,11 +1,11 @@
 from socketIO_client import SocketIO, LoggingNamespace
 import uuid
-from crowdai_errors import *
-from job_states import JobStates
-from response_types import CrowdAIResponseEvent
-from events import CrowdAIEvents
+from .crowdai_errors import *
+from .job_states import JobStates
+from .response_types import CrowdAIResponseEvent
+from .events import CrowdAIEvents
 
-import logging_helpers as lh
+import .logging_helpers as lh
 
 import json
 

@@ -3,7 +3,7 @@ from collections import defaultdict
 from pip.req import parse_requirements
 
 setup(name='crowdai',
-      version='1.0.3',
+      version='1.0.4',
       description='Python client to interact with CrowdAI Grading Server.',
       url='https://github.com/spMohanty/crowdai-client-py',
       download_url='https://github.com/spMohanty/crowdai-client-py',
