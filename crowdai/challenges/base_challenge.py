@@ -1,20 +1,17 @@
-from socketIO_client import SocketIO, LoggingNamespace
-import uuid
-from .crowdai_errors import *
-from .job_states import JobStates
-from .response_types import CrowdAIResponseEvent
-from .events import CrowdAIEvents
-
-import logging_helpers as lh
+from __future__ import print_function
 
 import json
-
-from tqdm import tqdm
-from termcolor import colored, cprint
-
-import pkg_resources
-
 import time
+import uuid
+
+import logging_helpers as lh
+import pkg_resources
+from socketIO_client import SocketIO, LoggingNamespace
+from termcolor import colored
+from tqdm import tqdm
+
+from .crowdai_errors import *
+from .events import CrowdAIEvents
 
 
 class BaseChallenge(object):
@@ -29,11 +26,11 @@ class BaseChallenge(object):
         self.AGGREGATED_PROGRESS_BAR=False
 
     def on_connect(self):
-        print lh.success(CrowdAIEvents.Connection["CONNECTED"], "")
+        print(lh.success(CrowdAIEvents.Connection["CONNECTED"], ""))
     def on_disconnect(self):
-        print lh.error(CrowdAIEvents.Connection["DISCONNECTED"], "")
+        print(lh.error(CrowdAIEvents.Connection["DISCONNECTED"], ""))
     def on_reconnect(self):
-        print lh.success(CrowdAIEvents.Connection["RECONNECTED"], "")
+        print(lh.success(CrowdAIEvents.Connection["RECONNECTED"], ""))
 
     def _connect(self):
         # TO-DO : Handle socketio connection and disconnection events
@@ -48,10 +45,10 @@ class BaseChallenge(object):
     def _authenticate_response(self, args):
         if args["response_type"] == CrowdAIEvents.Authentication["SUCCESS"]:
             self.session_key = args["session_token"]
-            print lh.success(CrowdAIEvents.Authentication["SUCCESS"], "Authentication Successful")
+            print(lh.success(CrowdAIEvents.Authentication["SUCCESS"], "Authentication Successful"))
         else:
             # TO-DO: Log authentication error
-            print lh.error(CrowdAIEvents.Authentication["ERROR"], args["message"])
+            print(lh.error(CrowdAIEvents.Authentication["ERROR"], args["message"]))
             self.disconnect()
             raise CrowdAIAuthenticationError(args["message"])
 
@@ -59,8 +56,8 @@ class BaseChallenge(object):
         pass
 
     def _authenticate(self):
-        print lh.info(CrowdAIEvents.Authentication[""],
-                        "Authenticating for challenge = "+colored(self.challenge_id, "blue", attrs=['bold', 'underline']))
+        print(lh.info(CrowdAIEvents.Authentication[""],
+                        "Authenticating for challenge = "+colored(self.challenge_id, "blue", attrs=['bold', 'underline'])))
 
         self.session_key = None
         self.socketio.on('authenticate_response', self._authenticate_response)
@@ -246,7 +243,7 @@ class BaseChallenge(object):
         try:
             if seq_no != -1:
                 foo = self.last_reported_progress[seq_no]
-        except:
+        except Exception:
             return
         self.pbar[seq_no].update(diff)
 
@@ -257,6 +254,6 @@ class BaseChallenge(object):
         try:
             if seq_no != -1:
                 foo = self.last_reported_progress[seq_no]
-        except:
+        except Exception:
             return
         self.pbar[seq_no].set_description(line)
