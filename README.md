@@ -25,6 +25,9 @@ challenge.disconnect()
 * OpenSNPChallenge2017
   - `submit` :
     Submit the list of heights for the test set
+* CriteoAdPlacementNIPS2017
+  - `submit` :
+    Submits the path to a prediction file for the [Criteo Ad Placement challenge](https://www.crowdai.org/challenges/nips-17-workshop-criteo-ad-placement-challenge)
 
 # Author
 S.P. Mohanty <sharada.mohanty@epfl.ch>
