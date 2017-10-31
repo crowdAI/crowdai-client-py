@@ -24,13 +24,14 @@ class BaseChallenge(object):
         self.pbar = None
         self.PROGRESS_BAR=True
         self.AGGREGATED_PROGRESS_BAR=False
+        self.SUPPRESS_LOGGING_HELPERS=False
 
     def on_connect(self):
-        print(lh.success(CrowdAIEvents.Connection["CONNECTED"], ""))
+        if not self.SUPPRESS_LOGGING_HELPERS: print(lh.success(CrowdAIEvents.Connection["CONNECTED"], ""))
     def on_disconnect(self):
-        print(lh.error(CrowdAIEvents.Connection["DISCONNECTED"], ""))
+        if not self.SUPPRESS_LOGGING_HELPERS: print(lh.error(CrowdAIEvents.Connection["DISCONNECTED"], ""))
     def on_reconnect(self):
-        print(lh.success(CrowdAIEvents.Connection["RECONNECTED"], ""))
+        if not self.SUPPRESS_LOGGING_HELPERS: print(lh.success(CrowdAIEvents.Connection["RECONNECTED"], ""))
 
     def _connect(self):
         # TO-DO : Handle socketio connection and disconnection events
@@ -45,10 +46,10 @@ class BaseChallenge(object):
     def _authenticate_response(self, args):
         if args["response_type"] == CrowdAIEvents.Authentication["SUCCESS"]:
             self.session_key = args["session_token"]
-            print(lh.success(CrowdAIEvents.Authentication["SUCCESS"], "Authentication Successful"))
+            if not self.SUPPRESS_LOGGING_HELPERS: print(lh.success(CrowdAIEvents.Authentication["SUCCESS"], "Authentication Successful"))
         else:
             # TO-DO: Log authentication error
-            print(lh.error(CrowdAIEvents.Authentication["ERROR"], args["message"]))
+            if not self.SUPPRESS_LOGGING_HELPERS: print(lh.error(CrowdAIEvents.Authentication["ERROR"], args["message"]))
             self.disconnect()
             raise CrowdAIAuthenticationError(args["message"])
 
@@ -56,7 +57,7 @@ class BaseChallenge(object):
         pass
 
     def _authenticate(self):
-        print(lh.info(CrowdAIEvents.Authentication[""],
+        if not self.SUPPRESS_LOGGING_HELPERS: print(lh.info(CrowdAIEvents.Authentication[""],
                         "Authenticating for challenge = "+colored(self.challenge_id, "blue", attrs=['bold', 'underline'])))
 
         self.session_key = None
@@ -187,12 +188,16 @@ class BaseChallenge(object):
             time.sleep(2)
 
     def instantiate_progress_trackers(self, number):
+        if self.SUPPRESS_LOGGING_HELPERS:
+            return
         self.last_reported_progress = []
         for k in range(number):
             self.last_reported_progress.append(0)
         self.last_reported_mean_progress = 0
 
     def update_progress_tracker(self, seq_no, value):
+        if self.SUPPRESS_LOGGING_HELPERS:
+            return
         diff = 0
         if value > self.last_reported_progress[seq_no]:
             diff = value - self.last_reported_progress[seq_no]
@@ -209,6 +214,8 @@ class BaseChallenge(object):
                 self.update_single_progress_bar(seq_no, diff)
 
     def instantiate_progress_bars(self, number):
+        if self.SUPPRESS_LOGGING_HELPERS:
+            return
         self.instantiate_progress_trackers(number)
 
         if self.PROGRESS_BAR:
@@ -236,10 +243,14 @@ class BaseChallenge(object):
                              ))
 
     def close_all_progress_bars(self):
+        if self.SUPPRESS_LOGGING_HELPERS:
+            return
         for _idx, _pbar in enumerate(self.pbar):
             _pbar.close()
 
     def update_single_progress_bar(self, seq_no, diff):
+        if self.SUPPRESS_LOGGING_HELPERS:
+            return
         try:
             if seq_no != -1:
                 foo = self.last_reported_progress[seq_no]
@@ -248,12 +259,19 @@ class BaseChallenge(object):
         self.pbar[seq_no].update(diff)
 
     def write_above_single_progress_bar(self, seq_no, line):
+        if self.SUPPRESS_LOGGING_HELPERS:
+            return
         tqdm.write(line)
 
     def update_single_progress_bar_description(self, seq_no, line):
+        if self.SUPPRESS_LOGGING_HELPERS:
+            return
         try:
             if seq_no != -1:
                 foo = self.last_reported_progress[seq_no]
         except Exception:
             return
         self.pbar[seq_no].set_description(line)
+
+    def verbose(self, v):
+        self.SUPPRESS_LOGGING_HELPERS = not v

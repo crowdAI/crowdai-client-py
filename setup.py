@@ -8,7 +8,7 @@ def find_requirements():
 
 
 setup(name='crowdai',
-      version='1.0.7',
+      version='1.0.8',
       description='Python client to interact with CrowdAI Grading Server.',
       url='https://github.com/spMohanty/crowdai-client-py',
       download_url='https://github.com/spMohanty/crowdai-client-py',

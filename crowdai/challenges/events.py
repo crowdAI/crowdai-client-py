@@ -27,3 +27,7 @@ class CrowdAIEvents(object):
         "INFO":"CrowdAI.Event.Job.INFO",
         "TIMEOUT":"CrowdAI.Event.Job.TIMEOUT",
     }
+    Misc={
+        "":"CrowdAI.Event.Misc",
+        "FILE_UPLOAD":"CrowdAI.Event.Misc.FILE_UPLOAD"
+    }
