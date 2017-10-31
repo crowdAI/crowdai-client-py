@@ -23,18 +23,20 @@ class CriteoAdPlacementNIPS2017(BaseChallenge):
         print(lh.blue(CrowdAIEvents.Misc["FILE_UPLOAD"]+" : Preparing for file upload"))
 
         self.verbose(False)
-        result = self._obtain_presigned_url()
+        response = self._obtain_presigned_url()
         self.verbose(True)
 
-        print(result)
         print(lh.blue(CrowdAIEvents.Misc["FILE_UPLOAD"]+" : Uploading file"))
-        url = result["presigned_url"]
+        url = response["presigned_url"]
+        file_key = response["file_key"]
 
         #Instantiate Progress Trackers
         self.instantiate_progress_bars(1)
         r = requests.put(url, data=IterableToFileAdapter(upload_in_chunks(filename, self, chunksize=5000)))
         self.close_all_progress_bars()
-        return r
+
+        result = self.execute_function("grade_submission", [{"file_key":file_key}])[0]
+        return result
 
 class upload_in_chunks(object):
     def __init__(self, filename, challenge_instance, chunksize=1 << 13):
