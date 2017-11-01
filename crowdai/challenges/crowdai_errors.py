@@ -6,3 +6,9 @@ class CrowdAIAuthenticationError(BaseChallengeException):
 
 class CrowdAIExecuteFunctionError(BaseChallengeException):
     pass
+
+class CrowdAIAPINotAvailableError(BaseChallengeException):
+    pass
+
+class InvalidFileError(BaseChallengeException):
+    pass

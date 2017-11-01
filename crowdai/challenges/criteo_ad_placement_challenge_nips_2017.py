@@ -6,6 +6,7 @@ import requests
 import time
 import os
 import sys
+import gzip
 
 class CriteoAdPlacementNIPS2017(BaseChallenge):
     def __init__(self, api_key, config):
@@ -21,12 +22,20 @@ class CriteoAdPlacementNIPS2017(BaseChallenge):
             return response.json()
         else:
             # TODO: Wrap it in a correct CrowdAIException Class
-            raise Exception("Unable to connect to CrowdAI API.")
+            raise CrowdAIAPINotAvailableError("Unable to connect to CrowdAI API.")
 
     def submit(self, filename):
         #TODO: Add validation
         #TODO: Add LOADS of client side validation
         print(lh.blue(CrowdAIEvents.Misc["FILE_UPLOAD"]+" : Preparing for file upload"))
+
+        # Validate that the file is indeed a valid gzip file
+        try:
+            _fp = gzip.open(filename, 'rb')
+            _d = _fp.read()
+        except IOError:
+            err_message = "`{}` doesnot seem to be a valid gzip file. The grader acccepts only gzipped version of the prediction file.".format(filename)
+            raise InvalidFileError(err_message)
 
         self.verbose(False)
         response = self._obtain_presigned_url()
