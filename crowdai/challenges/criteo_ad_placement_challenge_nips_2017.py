@@ -16,6 +16,13 @@ class CriteoAdPlacementNIPS2017(BaseChallenge):
 
     def _obtain_presigned_url(self, dry_run=False):
         return self.execute_function('obtain_presigned_url', [self.session_key], parallel=False)[0]
+        # url = self.config['crowdai_remote_api'] + "{}/presign".format(self.api_key)
+        # response = requests.get(url)
+        # if response.status_code == 200:
+        #     return response.json()
+        # else:
+        #     # TODO: Wrap it in a correct CrowdAIException Class
+        #     raise Exception("Unable to connect to CrowdAI API.")
 
     def submit(self, filename):
         #TODO: Add validation
@@ -27,6 +34,7 @@ class CriteoAdPlacementNIPS2017(BaseChallenge):
         self.verbose(True)
 
         print(lh.blue(CrowdAIEvents.Misc["FILE_UPLOAD"]+" : Uploading file"))
+        # print response
         url = response["presigned_url"]
         file_key = response["file_key"]
 

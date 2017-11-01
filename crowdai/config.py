@@ -20,5 +20,6 @@ config = {
             "class": CriteoAdPlacementNIPS2017,
             "TIMEOUT_EXECUTION" : 20000
         }
-    }
+    },
+    'crowdai_remote_api' : 'https://www.crowdai.org/api/external_graders/'
 }
