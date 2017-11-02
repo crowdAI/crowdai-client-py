@@ -24,7 +24,7 @@ class CriteoAdPlacementNIPS2017(BaseChallenge):
             # TODO: Wrap it in a correct CrowdAIException Class
             raise CrowdAIAPINotAvailableError("Unable to connect to CrowdAI API.")
 
-    def submit(self, filename):
+    def submit(self, filename, small_test=False):
         #TODO: Add validation
         #TODO: Add LOADS of client side validation
         print(lh.blue(CrowdAIEvents.Misc["FILE_UPLOAD"]+" : Preparing for file upload"))
@@ -51,7 +51,7 @@ class CriteoAdPlacementNIPS2017(BaseChallenge):
         r = requests.put(url, data=IterableToFileAdapter(upload_in_chunks(filename, self, chunksize=5000)))
         self.close_all_progress_bars()
 
-        result = self.execute_function("grade_submission", [{"file_key":file_key}])[0]
+        result = self.execute_function("grade_submission", [{"file_key":file_key, "small_test":small_test}])[0]
         return result
 
 class upload_in_chunks(object):
