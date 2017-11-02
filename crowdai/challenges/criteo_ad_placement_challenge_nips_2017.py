@@ -42,7 +42,6 @@ class CriteoAdPlacementNIPS2017(BaseChallenge):
         self.verbose(True)
 
         print(lh.blue(CrowdAIEvents.Misc["FILE_UPLOAD"]+" : Uploading file"))
-        print response
         url = response["presigned_url"]
         file_key = response["s3_key"]
 
