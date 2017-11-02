@@ -52,6 +52,8 @@ class CriteoAdPlacementNIPS2017(BaseChallenge):
         self.close_all_progress_bars()
 
         result = self.execute_function("grade_submission", [{"file_key":file_key, "small_test":small_test}])[0]
+
+        del result["job_state"]
         return result
 
 class upload_in_chunks(object):
