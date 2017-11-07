@@ -6,6 +6,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__))+"/challenges/")
 
 from .challenges.opensnp_challenge_2017 import OpenSNPChallenge2017
 from .challenges.criteo_ad_placement_challenge_nips_2017 import CriteoAdPlacementNIPS2017
+from .challenges.learning_2_run_challenge_nips_2017 import Learning2RunChallengeNIPS2017
 
 config = {
     'remote_host' : 'grader.crowdai.org',
@@ -18,6 +19,10 @@ config = {
             },
         'CriteoAdPlacementNIPS2017': {
             "class": CriteoAdPlacementNIPS2017,
+            "TIMEOUT_EXECUTION" : 20000
+        },
+        'Learning2RunChallengeNIPS2017': {
+            "class": Learning2RunChallengeNIPS2017,
             "TIMEOUT_EXECUTION" : 20000
         }
     },

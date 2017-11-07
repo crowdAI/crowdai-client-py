@@ -28,6 +28,8 @@ challenge.disconnect()
 * CriteoAdPlacementNIPS2017
   - `submit` :
     Submits the path to a prediction file for the [Criteo Ad Placement challenge](https://www.crowdai.org/challenges/nips-17-workshop-criteo-ad-placement-challenge)
-
+* Learning2RunChallengeNIPS2017
+  - `submit`:
+    Submits a docker tar dump for the [NIPS 2017: Learning to Run Challenge]
 # Author
 S.P. Mohanty <sharada.mohanty@epfl.ch>
