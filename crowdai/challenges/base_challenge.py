@@ -49,7 +49,8 @@ class BaseChallenge(object):
             if not self.SUPPRESS_LOGGING_HELPERS: print(lh.success(CrowdAIEvents.Authentication["SUCCESS"], "Authentication Successful"))
         else:
             # TO-DO: Log authentication error
-            if not self.SUPPRESS_LOGGING_HELPERS: print(lh.error(CrowdAIEvents.Authentication["ERROR"], args["message"]))
+            if not self.SUPPRESS_LOGGING_HELPERS:
+                print(lh.error(CrowdAIEvents.Authentication["ERROR"], args["message"]))
             self.disconnect()
             raise CrowdAIAuthenticationError(args["message"])
 
