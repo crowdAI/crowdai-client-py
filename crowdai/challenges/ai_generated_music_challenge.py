@@ -3,7 +3,7 @@ import logging_helpers as lh
 from .events import CrowdAIEvents
 from .crowdai_errors import CrowdAIAPINotAvailableError
 import requests
-from .helpers.upload_helpers import upload_in_chunks, IterableToFileAdapter
+from .upload_helpers import upload_in_chunks, IterableToFileAdapter
 
 
 class AIGeneratedMusicChallenge(BaseChallenge):
