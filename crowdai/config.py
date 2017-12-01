@@ -7,6 +7,7 @@ from .challenges.opensnp_challenge_2017 import OpenSNPChallenge2017
 from .challenges.criteo_ad_placement_challenge_nips_2017 import CriteoAdPlacementNIPS2017
 from .challenges.learning_2_run_challenge_nips_2017 import Learning2RunChallengeNIPS2017
 from .challenges.ai_generated_music_challenge import AIGeneratedMusicChallenge
+from .challenges.www_musical_genre_challenge import WWWMusicalGenreRecognitionChallenge
 
 config = {
     'remote_host': 'grader.crowdai.org',
@@ -27,6 +28,10 @@ config = {
         },
         'AIGeneratedMusicChallenge': {
             "class": AIGeneratedMusicChallenge,
+            "TIMEOUT_EXECUTION": 20000
+        },
+        'WWWMusicalGenreRecognitionChallenge': {
+            "class": WWWMusicalGenreRecognitionChallenge,
             "TIMEOUT_EXECUTION": 20000
         }
     },
