@@ -34,6 +34,9 @@ challenge.disconnect()
 * AIGeneratedMusicChallenge
   - `submit`:
     Submits a midi file of length 3600 seconds (at 120 bpm) to the grading interface
+* KITEnergyChallenge
+  - `submit`:
+    Submits a the forecasts for the problem definition in the KITEnergyChallenge
 
 # Author
 S.P. Mohanty <sharada.mohanty@epfl.ch>
