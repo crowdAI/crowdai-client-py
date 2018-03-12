@@ -9,6 +9,8 @@ from .challenges.learning_2_run_challenge_nips_2017 import Learning2RunChallenge
 from .challenges.ai_generated_music_challenge import AIGeneratedMusicChallenge
 from .challenges.www_musical_genre_challenge import WWWMusicalGenreRecognitionChallenge
 from .challenges.kit_energy_challenge import KITEnergyChallenge
+from .challenges.ieee_stock_prediction_challenge import IEEEStockPredictionChallenge
+
 config = {
     'remote_host': 'grader.crowdai.org',
     'remote_port': 80,
@@ -36,6 +38,10 @@ config = {
         },
         'KITEnergyChallenge': {
             "class": KITEnergyChallenge,
+            "TIMEOUT_EXECUTION": 20000
+        },
+        'IEEEStockPredictionChallenge' : {
+            "class" : IEEEStockPredictionChallenge,
             "TIMEOUT_EXECUTION": 20000
         }
     },
