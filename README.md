@@ -37,9 +37,9 @@ challenge.disconnect()
 * KITEnergyChallenge
   - `submit`:
     Submits a the forecasts for the problem definition in the KITEnergyChallenge
-* IEEEStockPredictionChallenge
+* IEEEInvestmentRankingChallenge
   - `submit`:
-    Submits a the predictions for the problem definition in the IEEEStockPredictionChallenge
+    Submits a the predictions for the problem definition in the IEEEInvestmentRankingChallenge
 
 # Author
 S.P. Mohanty <sharada.mohanty@epfl.ch>

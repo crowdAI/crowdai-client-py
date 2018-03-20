@@ -6,11 +6,11 @@ import requests
 from .upload_helpers import upload_in_chunks, IterableToFileAdapter
 
 
-class IEEEStockPredictionChallenge(BaseChallenge):
+class IEEEInvestmentRankingChallenge(BaseChallenge):
     def __init__(self, api_key, config):
-        self.challenge_id = "IEEEStockPredictionChallenge"
+        self.challenge_id = "IEEEInvestmentRankingChallenge"
         super(
-            IEEEStockPredictionChallenge,
+            IEEEInvestmentRankingChallenge,
             self).__init__(self.challenge_id, api_key, config)
         self._connect()
         self._authenticate()
