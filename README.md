@@ -40,6 +40,9 @@ challenge.disconnect()
 * IEEEInvestmentRankingChallenge
   - `submit`:
     Submits a the predictions for the problem definition in the IEEEInvestmentRankingChallenge
-
+* crowdAIMappingChallenge
+  - `submit`:
+    Submits a predicted `annotations.json` file for the problem definition in [crowdAI Mapping Challenge](https://www.crowdai.org/challenges/mapping-challenge)
+  
 # Author
 S.P. Mohanty <sharada.mohanty@epfl.ch>

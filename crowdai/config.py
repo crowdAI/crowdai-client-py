@@ -10,6 +10,7 @@ from .challenges.ai_generated_music_challenge import AIGeneratedMusicChallenge
 from .challenges.www_musical_genre_challenge import WWWMusicalGenreRecognitionChallenge
 from .challenges.kit_energy_challenge import KITEnergyChallenge
 from .challenges.ieee_investment_ranking_challenge import IEEEInvestmentRankingChallenge
+from .challenges.crowdai_mapping_challenge import crowdAIMappingChallenge
 
 config = {
     'remote_host': 'grader.crowdai.org',
@@ -42,6 +43,10 @@ config = {
         },
         'IEEEInvestmentRankingChallenge' : {
             "class" : IEEEInvestmentRankingChallenge,
+            "TIMEOUT_EXECUTION": 20000
+        },
+        'crowdAIMappingChallenge' : {
+            "class" : crowdAIMappingChallenge,
             "TIMEOUT_EXECUTION": 20000
         }
     },
