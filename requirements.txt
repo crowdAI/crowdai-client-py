@@ -4,7 +4,7 @@ enum-compat==0.0.2
 enum34>=1.1.6,<1.2
 Flask>=0.12.1,<0.13
 itsdangerous==0.24
-Jinja2>=2.9.6,<2.10
+Jinja2==2.9.6
 MarkupSafe==1.0
 packaging==16.8
 pyparsing>=2.2,<2.3
