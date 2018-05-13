@@ -27,7 +27,12 @@ class IEEEInvestmentRankingChallenge(BaseChallenge):
                     "Unable to connect to CrowdAI API."
                     )
 
-    def submit(self, filename):
+    def submit(self, filename, round=1):
+        print(
+            lh.blue(
+                CrowdAIEvents.Misc[""] +
+                " : Making submission for Round {}".format(round)))
+        assert round in [1, 2]
         print(
             lh.blue(
                 CrowdAIEvents.Misc["FILE_UPLOAD"] +
@@ -51,7 +56,10 @@ class IEEEInvestmentRankingChallenge(BaseChallenge):
 
         result = self.execute_function(
                 "grade_submission",
-                [{"file_key": file_key}]
+                [{
+                    "file_key": file_key,
+                    "round": round
+                 }]
                 )[0]
         del result["job_state"]
         return result
