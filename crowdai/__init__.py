@@ -4,8 +4,9 @@ def Challenge(challenge_id, API_KEY):
     if challenge_id in config['challenges'].keys():
         return config['challenges'][challenge_id]['class'](API_KEY, config)
     else:
-        #TO-DO : Do error handling here
-        raise Exception("Error :( Unknown challenge_id. Update your client")
+        #It is most possibly a crowdAI Generic Challenge
+        challenge = config['challenges']['crowdAIGenericChallenge']['class'](API_KEY, challenge_id, config)
+        return challenge
 
 def test():
     """

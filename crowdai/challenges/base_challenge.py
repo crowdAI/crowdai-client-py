@@ -15,7 +15,11 @@ from .events import CrowdAIEvents
 
 
 class BaseChallenge(object):
-    def __init__(self, challenge_id, api_key, config):
+    def __init__(self, challenge_id, api_key, config, grader_id=False):
+        #
+        # challenge_id is present for backward compatibility reasons
+        # a combination of challenge_client_name and grader_id should be
+        # used for all the new challenges
         self.api_key = str(api_key).strip()
         self.challenge_id = challenge_id
         self.config = config
@@ -25,6 +29,9 @@ class BaseChallenge(object):
         self.PROGRESS_BAR=True
         self.AGGREGATED_PROGRESS_BAR=False
         self.SUPPRESS_LOGGING_HELPERS=False
+
+        self.challenge_client_name = challenge_id
+        self.grader_id = grader_id
 
     def on_connect(self):
         if not self.SUPPRESS_LOGGING_HELPERS: print(lh.success(CrowdAIEvents.Connection["CONNECTED"], ""))
@@ -162,20 +169,45 @@ class BaseChallenge(object):
 
         self.instantiate_progress_bars(len(data))
 
+        if self.challenge_client_name and self.grader_id:
+            payload = {
+                "response_channel" : self.response_channel,
+                "session_token": self.session_key,
+                "api_key": self.api_key,
+                "grader_id": self.grader_id,
+                "challenge_client_name": self.challenge_client_name,
+                "function_name": function_name,
+                "data": data,
+                "dry_run" : dry_run,
+                "parallel" : parallel
+            }
+        else:
+            """
+            This payload structure is deprecated. and is only added conditionally
+            for backward compatibility.
+            """
+            payload = {
+                "response_channel" : self.response_channel,
+                "session_token": self.session_key,
+                "api_key": self.api_key,
+                "challenge_id": self.challenge_id,
+                "function_name": function_name,
+                "data": data,
+                "dry_run" : dry_run,
+                "parallel" : parallel
+            }
+
         self.socketio.on(self.response_channel, self.on_execute_function_response)
         self.execute_function_response = None
-        self.socketio.emit('execute_function',
-                        {   "response_channel" : self.response_channel,
-                            "session_token": self.session_key,
-                            "api_key": self.api_key,
-                            "challenge_id": self.challenge_id,
-                            "function_name": function_name,
-                            "data": data,
-                            "dry_run" : dry_run,
-                            "parallel" : parallel
-                        }, self.on_execute_function_response_complete)
 
-        self.socketio.wait_for_callbacks(seconds=self.config['challenges'][self.challenge_id]["TIMEOUT_EXECUTION"])
+        self.socketio.emit('execute_function',
+                        payload, self.on_execute_function_response_complete)
+
+        if self.challenge_id not in self.config['challenges'].keys():
+            timeout = self.config['challenges']["crowdAIGenericChallenge"]["TIMEOUT_EXECUTION"]
+        else:
+            timeout = self.config['challenges'][self.challenge_id]["TIMEOUT_EXECUTION"]
+        self.socketio.wait_for_callbacks(seconds=timeout)
 
         """
         This keeps checking until the aggregated_responses are prepared by the final on_execute_function_response_complete
